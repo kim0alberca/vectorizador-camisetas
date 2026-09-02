@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Pro & Extractor de Camisetas</title>
+  <title>Vectorizador Pro Instantáneo</title>
   
-  <!-- Librerías para JSZip y FileSaver -->
+  <!-- Librería Potrace en navegador y empaquetador ZIP -->
+  <script src="https://cdn.jsdelivr.net/npm/potrace@2.1.8/index.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -25,34 +26,24 @@
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 30px 15px; }
 
     .container { max-width: 900px; margin: 0 auto; }
-    
     header { text-align: center; margin-bottom: 40px; }
     header img.logo { max-width: 180px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 0 10px rgba(0,242,254,0.3)); }
     h1 { font-size: 32px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
     p.subtitle { color: var(--text-dim); font-size: 16px; }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
-    @media(max-width: 700px) { .grid { grid-template-columns: 1fr; } }
-
-    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 25px; text-align: center; transition: all 0.3s ease; position: relative; }
-    .card:hover { border-color: var(--accent-cyan); transform: translateY(-3px); }
-    .card h3 { color: var(--text-main); margin-bottom: 10px; font-size: 20px; }
-    .card p { color: var(--text-dim); font-size: 13px; margin-bottom: 20px; min-height: 38px; }
-
-    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 20px; background: rgba(0,0,0,0.2); cursor: pointer; margin-bottom: 15px; }
-    .drop-zone:hover { background: rgba(0,242,254,0.05); }
+    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px; }
+    
+    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px; background: rgba(0,0,0,0.2); cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
+    .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
 
     .file-input { display: none; }
-    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 15px; transition: opacity 0.2s; }
-    .btn-green { background: linear-gradient(90deg, #00e676, #1de9b6); }
-    .btn-select:hover { opacity: 0.9; }
+    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; }
 
     .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; text-align: center; display: none; }
-    .spinner { border: 4px solid rgba(255,255,255,0.1); width: 50px; height: 50px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 20px; }
+    .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .btn-download { display: inline-block; background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); transition: transform 0.2s; border: none; cursor: pointer; }
-    .btn-download:hover { transform: scale(1.03); }
+    .btn-download { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); border: none; cursor: pointer; display: inline-block; }
   </style>
 </head>
 <body>
@@ -60,220 +51,113 @@
   <div class="container">
     <header>
       <img src="logo blanco.png" alt="Logo" class="logo" onerror="this.style.display='none'">
-      <h1>Vectorizador Pro & Extractor</h1>
-      <p class="subtitle">Procesamiento masivo directo a formato SVG para Adobe Illustrator</p>
+      <h1>Vectorizador Pro Instantáneo</h1>
+      <p class="subtitle">Convierte tus diseños a vectores SVG para serigrafía y estampado en segundos</p>
     </header>
 
-    <div class="grid">
-      <div class="card">
-        <h3>🖼️ Vectorizador Normal</h3>
-        <p>Convierte logos, imágenes y dibujos planos a vectores SVG.</p>
-        <div class="drop-zone" onclick="document.getElementById('inputNormal').click()">
-          <span id="labelNormal">Arrastra o haz clic para seleccionar imágenes</span>
-          <input type="file" id="inputNormal" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta('inputNormal', 'labelNormal')">
-        </div>
-        <button class="btn-select" onclick="procesarSubida('inputNormal', 'input_normal')">Procesar Vectores</button>
+    <div class="card">
+      <h3>📁 Seleccionar Imágenes para Vectorizar</h3>
+      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos. El proceso se realiza directamente en tu navegador.</p>
+      
+      <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
+        <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes (PNG, JPG)</span>
+        <input type="file" id="inputImagenes" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta()">
       </div>
-
-      <div class="card">
-        <h3>👕 Extractor de Camisetas</h3>
-        <p>Elimina tela, arrugas y fondo. Extrae el arte plano vectorizado.</p>
-        <div class="drop-zone" onclick="document.getElementById('inputCamisetas').click()">
-          <span id="labelCamisetas">Arrastra o haz clic para seleccionar camisetas</span>
-          <input type="file" id="inputCamisetas" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta('inputCamisetas', 'labelCamisetas')">
-        </div>
-        <button class="btn-select btn-green" onclick="procesarSubida('inputCamisetas', 'input_camisetas')">Extraer y Vectorizar</button>
-      </div>
+      
+      <button class="btn-select" onclick="procesarVectorizacion()">⚡ Vectorizar Imágenes Ahora</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Procesando imágenes en la nube...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Subiendo archivos al servidor. Esto puede tomar unos momentos.</p>
+      <h2 id="statusTitle">Procesando vectores...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Renderizando gráficos vectoriales SVG...</p>
       <div id="downloadArea" style="margin-top: 20px;"></div>
     </div>
   </div>
 
   <script>
-    const REPO_USER = "kim0alberca";
-    const REPO_NAME = "vectorizador-camisetas";
-    
-    const p1 = "ghp_yUizWQTu04bBtCvV";
-    const p2 = "C2HOVU6sroJ4hO12y13j";
-    const GITHUB_TOKEN = p1 + p2;
+    let svgResultados = [];
 
-    function actualizarEtiqueta(inputId, labelId) {
-      const files = document.getElementById(inputId).files;
-      document.getElementById(labelId).innerText = files.length > 0 ? `${files.length} archivo(s) seleccionado(s)` : 'Seleccionar imágenes';
+    function actualizarEtiqueta() {
+      const files = document.getElementById('inputImagenes').files;
+      document.getElementById('labelImagenes').innerText = files.length > 0 
+        ? `${files.length} archivo(s) seleccionado(s)` 
+        : 'Haz clic o arrastra aquí tus imágenes (PNG, JPG)';
     }
 
-    async function procesarSubida(inputId, carpetaDestino) {
-      const files = document.getElementById(inputId).files;
+    async function procesarVectorizacion() {
+      const files = document.getElementById('inputImagenes').files;
       if (files.length === 0) return alert("Por favor, selecciona al menos una imagen.");
 
       const panel = document.getElementById('statusPanel');
+      const spinner = document.getElementById('spinner');
       const title = document.getElementById('statusTitle');
       const desc = document.getElementById('statusDesc');
       const downloadArea = document.getElementById('downloadArea');
-      const spinner = document.getElementById('spinner');
 
-      spinner.style.display = 'block';
       panel.style.display = 'block';
+      spinner.style.display = 'block';
       downloadArea.innerHTML = '';
-      title.innerText = "Subiendo imágenes...";
+      title.innerText = "Vectorizando imágenes...";
+      svgResultados = [];
 
-      try {
-        for (let file of files) {
-          const content = await fileToBase64(file);
-          await subirArchivoGitHub(carpetaDestino, file.name, content);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
+        
+        try {
+          const svgContent = await vectorizarImagen(file);
+          const nombreSvg = file.name.substring(0, file.name.lastIndexOf('.')) + '.svg';
+          svgResultados.push({ nombre: nombreSvg, contenido: svgContent });
+        } catch (e) {
+          console.error("Error al procesar " + file.name, e);
         }
-
-        title.innerText = "Procesando vectores en la nube...";
-        desc.innerText = "El servidor está procesando tus imágenes. Por favor espera a que se complete...";
-
-        monitorearProceso();
-
-      } catch (err) {
-        alert("Error durante la subida: " + err.message);
-        panel.style.display = 'none';
       }
+
+      spinner.style.display = 'none';
+      title.innerText = "¡Proceso Completado!";
+      desc.innerText = `Se han generado ${svgResultados.length} archivo(s) SVG correctamente.`;
+
+      downloadArea.innerHTML = `
+        <button onclick="descargarZip()" class="btn-download">
+          📦 Descargar Archivos Vectoriales (.ZIP)
+        </button>
+      `;
     }
 
-    function fileToBase64(file) {
+    function vectorizarImagen(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
-      });
-    }
-
-    async function subirArchivoGitHub(carpeta, fileName, base64Content) {
-      const path = `${carpeta}/${fileName}`;
-      const url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${path}`;
-      
-      let sha = "";
-      try {
-        const resGet = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-        if (resGet.ok) {
-          const dataGet = await resGet.json();
-          sha = dataGet.sha;
-        }
-      } catch (e) {}
-
-      const response = await fetch(url, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Subida automática Web: ${path}`,
-          content: base64Content,
-          sha: sha || undefined
-        })
-      });
-
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || response.statusText);
-      }
-    }
-
-    async function monitorearProceso() {
-      const interval = setInterval(async () => {
-        try {
-          const res = await fetch(`https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/actions/runs`, {
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-          });
-          const data = await res.json();
-          const ultimoRun = data.workflow_runs[0];
-
-          if (ultimoRun && ultimoRun.status === 'completed') {
-            clearInterval(interval);
-            
-            // Pausa de 3 segundos para asegurar la sincronización del repositorio
-            setTimeout(() => {
-              document.getElementById('spinner').style.display = 'none';
-              document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
-              document.getElementById('statusDesc').innerText = "Tus vectores SVG han sido generados con éxito.";
-
-              document.getElementById('downloadArea').innerHTML = `
-                <button onclick="descargarZipDirecto()" class="btn-download">
-                  📦 Descargar Archivo Vectorial (.ZIP)
-                </button>
-              `;
-            }, 3000);
-          }
-        } catch (e) {
-          console.error("Error al monitorear el proceso:", e);
-        }
-      }, 5000);
-    }
-
-    // Busca archivos SVG en carpetas habituales o en el root
-    async function obtenerArchivosSVG() {
-      const carpetas = ['output_normal', 'output_camisetas', 'output_svg', 'resultados', ''];
-      let todosLosArchivos = [];
-
-      for (let folder of carpetas) {
-        try {
-          const url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${folder}`;
-          const res = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              const svgs = data.filter(item => item.name.toLowerCase().endsWith('.svg'));
-              todosLosArchivos = todosLosArchivos.concat(svgs);
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            try {
+              Potrace.loadImage(img);
+              Potrace.process(function() {
+                const svg = Potrace.getSVG(1);
+                resolve(svg);
+              });
+            } catch (err) {
+              reject(err);
             }
-          }
-        } catch (e) {}
-      }
-
-      // Elimina duplicados por SHA/Path
-      const unicos = Array.from(new Set(todosLosArchivos.map(a => a.path)))
-        .map(path => todosLosArchivos.find(a => a.path === path));
-
-      return unicos;
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
-    async function descargarZipDirecto() {
-      const btn = document.querySelector('.btn-download');
-      btn.innerText = "Empaquetando vectores...";
-      btn.disabled = true;
+    function descargarZip() {
+      if (svgResultados.length === 0) return;
 
-      try {
-        let svgFiles = await obtenerArchivosSVG();
+      const zip = new JSZip();
+      svgResultados.forEach(item => {
+        zip.file(item.nombre, item.contenido);
+      });
 
-        // Reintento automático si GitHub aún no refrescó la API
-        if (svgFiles.length === 0) {
-          btn.innerText = "Sincronizando archivos...";
-          await new Promise(r => setTimeout(r, 4000));
-          svgFiles = await obtenerArchivosSVG();
-        }
-
-        if (svgFiles.length === 0) {
-          throw new Error("Aún no se detectan archivos .SVG en el repositorio. Verifica que tu Action haya terminado correctamente en GitHub.");
-        }
-
-        const zip = new JSZip();
-
-        for (let item of svgFiles) {
-          const fileRes = await fetch(item.download_url);
-          const blob = await fileRes.blob();
-          zip.file(item.name, blob);
-        }
-
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        saveAs(zipBlob, "vectores_procesados.zip");
-
-        btn.innerText = "📦 Descargar Archivo Vectorial (.ZIP)";
-        btn.disabled = false;
-      } catch (err) {
-        alert("Aviso: " + err.message);
-        btn.innerText = "Intentar de nuevo";
-        btn.disabled = false;
-      }
+      zip.generateAsync({ type: "blob" }).then(function(blob) {
+        saveAs(blob, "vectores_procesados.zip");
+      });
     }
   </script>
 </body>
