@@ -26,11 +26,6 @@
     h1 { font-size: 32px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
     p.subtitle { color: var(--text-dim); font-size: 16px; }
 
-    /* Configuración de Token */
-    .config-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-    .config-box label { font-size: 14px; color: var(--accent-cyan); display: block; margin-bottom: 8px; font-weight: bold; }
-    .config-box input { width: 100%; padding: 12px; background: #0b0f19; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 14px; }
-
     /* Cards de Subida */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
     @media(max-width: 700px) { .grid { grid-template-columns: 1fr; } }
@@ -53,7 +48,8 @@
     .spinner { border: 4px solid rgba(255,255,255,0.1); width: 50px; height: 50px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .btn-download { display: inline-block; background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); }
+    .btn-download { display: inline-block; background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); transition: transform 0.2s; }
+    .btn-download:hover { transform: scale(1.03); }
   </style>
 </head>
 <body>
@@ -65,12 +61,6 @@
       <p class="subtitle">Procesamiento masivo directo a formato SVG para Adobe Illustrator</p>
     </header>
 
-    <!-- Configuración del Token -->
-    <div class="config-box">
-      <label for="githubToken">🔑 GitHub Access Token (Requerido para procesar sin salir de la web):</label>
-      <input type="password" id="githubToken" placeholder="Pega tu ghp_... aquí" onchange="localStorage.setItem('gh_token', this.value)">
-    </div>
-
     <!-- Secciones de Carga -->
     <div class="grid">
       <!-- Modo 1 -->
@@ -78,7 +68,7 @@
         <h3>🖼️ Vectorizador Normal</h3>
         <p>Convierte logos, imágenes y dibujos planos a vectores SVG.</p>
         <div class="drop-zone" onclick="document.getElementById('inputNormal').click()">
-          <span id="labelNormal">Arrastra o haz clic para seleccionar 10+ imágenes</span>
+          <span id="labelNormal">Arrastra o haz clic para seleccionar imágenes</span>
           <input type="file" id="inputNormal" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta('inputNormal', 'labelNormal')">
         </div>
         <button class="btn-select" onclick="procesarSubida('inputNormal', 'input_normal')">Procesar Vectores</button>
@@ -89,7 +79,7 @@
         <h3>👕 Extractor de Camisetas</h3>
         <p>Elimina tela, arrugas y fondo. Extrae el arte plano vectorizado.</p>
         <div class="drop-zone" onclick="document.getElementById('inputCamisetas').click()">
-          <span id="labelCamisetas">Arrastra o haz clic para seleccionar 10+ camisetas</span>
+          <span id="labelCamisetas">Arrastra o haz clic para seleccionar camisetas</span>
           <input type="file" id="inputCamisetas" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta('inputCamisetas', 'labelCamisetas')">
         </div>
         <button class="btn-select btn-green" onclick="procesarSubida('inputCamisetas', 'input_camisetas')">Extraer y Vectorizar</button>
@@ -100,7 +90,7 @@
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
       <h2 id="statusTitle">Procesando imágenes en la nube...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Subiendo archivos a tu servidor. Esto puede tomar unos minutos.</p>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Subiendo archivos al servidor. Esto puede tomar unos momentos.</p>
       <div id="downloadArea" style="margin-top: 20px;"></div>
     </div>
   </div>
@@ -108,9 +98,9 @@
   <script>
     const REPO_USER = "kim0alberca";
     const REPO_NAME = "vectorizador-camisetas";
-
-    // Cargar Token Guardado
-    document.getElementById('githubToken').value = localStorage.getItem('gh_token') || '';
+    
+    // Token configurado de forma interna e invisible para el usuario
+    const GITHUB_TOKEN = "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";
 
     function actualizarEtiqueta(inputId, labelId) {
       const files = document.getElementById(inputId).files;
@@ -118,17 +108,17 @@
     }
 
     async function procesarSubida(inputId, carpetaDestino) {
-      const token = document.getElementById('githubToken').value.trim();
       const files = document.getElementById(inputId).files;
 
-      if (!token) return alert("Por favor, ingresa tu GitHub Access Token arriba.");
       if (files.length === 0) return alert("Por favor, selecciona al menos una imagen.");
 
       const panel = document.getElementById('statusPanel');
       const title = document.getElementById('statusTitle');
       const desc = document.getElementById('statusDesc');
       const downloadArea = document.getElementById('downloadArea');
+      const spinner = document.getElementById('spinner');
 
+      spinner.style.display = 'block';
       panel.style.display = 'block';
       downloadArea.innerHTML = '';
       title.innerText = "Subiendo imágenes...";
@@ -136,14 +126,14 @@
       try {
         for (let file of files) {
           const content = await fileToBase64(file);
-          await subirArchivoGitHub(token, `${carpetaDestino}/${file.name}`, content);
+          await subirArchivoGitHub(carpetaDestino, file.name, content);
         }
 
-        title.innerText = "Procesando vectores e Inteligencia Artificial...";
-        desc.innerText = "El servidor está convirtiendo las imágenes. Espera unos momentos...";
+        title.innerText = "Procesando vectores en la nube...";
+        desc.innerText = "El servidor está convirtiendo tus imágenes a SVG. Esto tomará entre 1 a 2 minutos...";
 
-        // Monitorear ejecucion de GitHub Actions
-        monitorearProceso(token);
+        // Iniciar monitoreo del proceso
+        monitorearProceso();
 
       } catch (err) {
         alert("Error durante la subida: " + err.message);
@@ -160,13 +150,13 @@
       });
     }
 
-    async function subirArchivoGitHub(token, path, base64Content) {
+    async function subirArchivoGitHub(carpeta, fileName, base64Content) {
+      const path = `${carpeta}/${fileName}`;
       const url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${path}`;
       
-      // Obtener SHA si el archivo ya existe
       let sha = "";
       try {
-        const resGet = await fetch(url, { headers: { 'Authorization': `token ${token}` } });
+        const resGet = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
         if (resGet.ok) {
           const dataGet = await resGet.json();
           sha = dataGet.sha;
@@ -176,24 +166,24 @@
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
-          'Authorization': `token ${token}`,
+          'Authorization': `token ${GITHUB_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `Subida desde Web: ${path}`,
+          message: `Subida automática Web: ${path}`,
           content: base64Content,
           sha: sha || undefined
         })
       });
 
-      if (!response.ok) throw new Error(`Error en API de GitHub (${response.statusText})`);
+      if (!response.ok) throw new Error(`Error al subir a GitHub (${response.statusText})`);
     }
 
-    async function monitorearProceso(token) {
+    async function monitorearProceso() {
       const interval = setInterval(async () => {
         try {
           const res = await fetch(`https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/actions/runs`, {
-            headers: { 'Authorization': `token ${token}` }
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
           });
           const data = await res.json();
           const ultimoRun = data.workflow_runs[0];
@@ -202,31 +192,21 @@
             clearInterval(interval);
             document.getElementById('spinner').style.display = 'none';
             document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
-            document.getElementById('statusDesc').innerText = "Tus archivos están listos para descargar en paquete ZIP.";
+            document.getElementById('statusDesc').innerText = "Tus archivos vectores están listos para descargar.";
 
-            // Generar botón de descarga
-            obtenerArtefactos(token, ultimoRun.id);
+            // URL directa y pública al Release para evitar error 404
+            const downloadUrl = `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/latest/vectores_procesados.zip`;
+            
+            document.getElementById('downloadArea').innerHTML = `
+              <a href="${downloadUrl}" target="_blank" class="btn-download">
+                📦 Descargar Archivo Vectorial (.ZIP)
+              </a>
+            `;
           }
         } catch (e) {
-          console.error("Error al monitorear:", e);
+          console.error("Error al monitorear el proceso:", e);
         }
       }, 5000);
-    }
-
-    async function obtenerArtefactos(token, runId) {
-      const res = await fetch(`https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/actions/runs/${runId}/artifacts`, {
-        headers: { 'Authorization': `token ${token}` }
-      });
-      const data = await res.json();
-      
-      if (data.artifacts.length > 0) {
-        const zipUrl = `https://github.com/${REPO_USER}/${REPO_NAME}/suites/${data.artifacts[0].workflow_run.check_suite_id}/artifacts/${data.artifacts[0].id}`;
-        document.getElementById('downloadArea').innerHTML = `
-          <a href="${zipUrl}" target="_blank" class="btn-download">
-            📦 Descargar Archivo Vectorial (.ZIP / WinRAR)
-          </a>
-        `;
-      }
     }
   </script>
 </body>
