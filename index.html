@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Pro Instantáneo - Ultra Calidad</title>
+  <title>Vectorizador HD para Serigrafía</title>
   
-  <!-- Motor de Vectorización Profesional Potrace -->
-  <script src="https://cdn.jsdelivr.net/npm/potrace@2.1.8/potrace.js"></script>
+  <!-- Vectorizador de alta fidelidad de color -->
+  <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
   <style>
     :root {
@@ -41,11 +41,14 @@
     .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .btn-download-item { background: rgba(0, 242, 254, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); font-weight: bold; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 14px; margin: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
-    .btn-download-item:hover { background: var(--accent-cyan); color: #000; }
+    .results-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 14px 20px; border-radius: 10px; border: 1px solid var(--border-color); }
+    .result-name { font-weight: 600; color: #fff; word-break: break-all; }
 
-    .results-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; text-align: left; }
-    .result-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+    .btn-download-single { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; transition: transform 0.2s; display: inline-block; white-space: nowrap; }
+    .btn-download-single:hover { transform: scale(1.03); }
+    
+    .error-log { color: #ff5252; font-size: 13px; margin-top: 15px; text-align: left; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 6px; display: none; }
   </style>
 </head>
 <body>
@@ -70,9 +73,11 @@
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Optimizando y Vectorizando...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Limpiando marcad de agua y suavizando bordes...</p>
+      <h2 id="statusTitle">Procesando vectores...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Limpiando marcas de agua y suavizando bordes...</p>
+      
       <div id="resultsGrid" class="results-grid"></div>
+      <div id="errorLog" class="error-log"></div>
     </div>
   </div>
 
@@ -93,103 +98,130 @@
       const title = document.getElementById('statusTitle');
       const desc = document.getElementById('statusDesc');
       const resultsGrid = document.getElementById('resultsGrid');
+      const errorLog = document.getElementById('errorLog');
 
       panel.style.display = 'block';
       spinner.style.display = 'block';
       resultsGrid.innerHTML = '';
-      title.innerText = "Vectorizando con Suavizado Bezier...";
+      errorLog.style.display = 'none';
+      errorLog.innerHTML = '';
+      title.innerText = "Vectorizando en Alta Fidelidad...";
+
+      let procesadosExitosos = 0;
+      let errores = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
+        
+        // Pausa breve para refrescar la UI
+        await new Promise(resolve => setTimeout(resolve, 60));
 
         try {
-          // 1. Limpieza de imagen con Canvas (Aumento de contraste / Filtro de ruido)
-          const processedCanvas = await preProcesarImagen(file);
-          
-          // 2. Trazado vectorial HD con Potrace
-          const svgData = await vectorizarConPotrace(processedCanvas);
+          // 1. Cargar y filtrar marcas de agua/ruido en Canvas
+          const imageData = await cargarYLimpiarImagen(file);
 
-          // 3. Crear botón de descarga individual por archivo
-          let nombreLimpio = file.name.replace(/\.[^/.]+$/, "") || `diseno_${i + 1}`;
-          agregarOpcionDescarga(nombreLimpio, svgData);
+          // 2. Vectorizar con parámetros ultra precisos
+          const svgContent = vectorizarImageDataHD(imageData);
 
+          if (svgContent && svgContent.length > 100) {
+            let nombreLimpio = file.name.replace(/\.[^/.]+$/, "") || `vector_${i + 1}`;
+            
+            // 3. Crear el botón de descarga individual
+            agregarFilaDescarga(nombreLimpio, svgContent);
+            procesadosExitosos++;
+          } else {
+            errores.push(`${file.name}: Generó un SVG vacío.`);
+          }
         } catch (e) {
-          console.error("Error en " + file.name, e);
+          console.error("Error procesando " + file.name, e);
+          errores.push(`${file.name}: ${e.message || e}`);
         }
       }
 
       spinner.style.display = 'none';
-      title.innerText = "¡Vectorización Completada!";
-      desc.innerText = "Tus archivos están listos para descargar de forma individual:";
+
+      if (procesadosExitosos > 0) {
+        title.innerText = "¡Vectorización Completada!";
+        desc.innerText = "Tus archivos están listos para descargar de forma individual:";
+      } else {
+        title.innerText = "Error en el procesamiento";
+        desc.innerText = "No se pudieron procesar las imágenes seleccionadas.";
+      }
+
+      if (errores.length > 0) {
+        errorLog.style.display = 'block';
+        errorLog.innerHTML = "<strong>Detalles del proceso:</strong><br>" + errores.join("<br>");
+      }
     }
 
-    // Pre-procesador que limpia el grano, ajusta contraste y quita marcas de agua tenue
-    function preProcesarImagen(file) {
+    // Pre-procesador que escala la imagen a 2X y limpia marcas de agua tenue / marcas tipo stock
+    function cargarYLimpiarImagen(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = function(e) {
           const img = new Image();
-          img.onload = () => {
+          img.onload = function() {
             const canvas = document.createElement('canvas');
-            // Escalar x2 para superar la calidad original
+            // Escala 2X para mejorar definición de curvas
             canvas.width = img.width * 2;
             canvas.height = img.height * 2;
             const ctx = canvas.getContext('2d');
 
-            // Suavizado de escalado
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Filtro de Binarización Inteligente (Elimina fondo/marcas de agua)
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
+            try {
+              const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const data = imgData.data;
 
-            for (let i = 0; i < data.length; i += 4) {
-              const r = data[i];
-              const g = data[i + 1];
-              const b = data[i + 2];
-              // Luminancia
-              const avg = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-              // Elimina grises claros (marcas de agua / ruido JPG)
-              if (avg > 180) {
-                data[i] = 255;
-                data[i + 1] = 255;
-                data[i + 2] = 255;
+              // Filtro de suavizado de contraste para eliminar retículas/marcas de agua tenues
+              for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Si el píxel es muy claro (marcas de agua / brillo de fondo), lo homogeneiza
+                if (r > 210 && g > 210 && b > 210) {
+                  data[i] = 255;
+                  data[i + 1] = 255;
+                  data[i + 2] = 255;
+                }
               }
-            }
 
-            ctx.putImageData(imgData, 0, 0);
-            resolve(canvas);
+              ctx.putImageData(imgData, 0, 0);
+              resolve(imgData);
+            } catch (err) {
+              reject(new Error("No se pudo procesar la matriz de píxeles."));
+            }
           };
+          img.onerror = () => reject(new Error("Formato de imagen no soportado."));
           img.src = e.target.result;
         };
+        reader.onerror = () => reject(new Error("Error leyendo archivo."));
         reader.readAsDataURL(file);
       });
     }
 
-    // Motor Potrace optimizado para serigrafía
-    function vectorizarConPotrace(canvas) {
-      return new Promise((resolve) => {
-        Potrace.setParameter({
-          turnpolicy: "minority",
-          turdsize: 10,        // Elimina manchas/puntos menores a 10px
-          optcurve: true,      // Optimización de curvas Bezier
-          alphamax: 1.2,       // Esquinas suaves
-          opttolerance: 0.2    // Tolerancia de precisión de contorno
-        });
+    // Configuración para trazo limpio y colores preservados
+    function vectorizarImageDataHD(imageData) {
+      const options = {
+        corsenabled: false,
+        ltres: 0.3,           // Súper precisión en rectas
+        qtres: 0.3,           // Súper precisión en curvas Bezier
+        pathomit: 8,          // Ignora manchas de ruido menores a 8px
+        colorsampling: 2,     // Lectura de color original
+        numberofcolors: 32,   // Paleta limpia de colores
+        mincolorratio: 0.01,  // Ignora sombras residuales tenue
+        colorquantcycles: 3
+      };
 
-        Potrace.loadImageFromUrl(canvas.toDataURL('image/png'), function() {
-          const svg = Potrace.getSVG(1);
-          resolve(svg);
-        });
-      });
+      return ImageTracer.imagedataToSVG(imageData, options);
     }
 
-    // Renderiza el botón de descarga individual
-    function agregarOpcionDescarga(nombre, svgContent) {
+    // Genera el enlace individual de descarga para cada archivo
+    function agregarFilaDescarga(nombre, svgContent) {
       const resultsGrid = document.getElementById('resultsGrid');
       
       const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
@@ -198,8 +230,8 @@
       const row = document.createElement('div');
       row.className = 'result-row';
       row.innerHTML = `
-        <span>📄 <strong>${nombre}.svg</strong></span>
-        <a href="${url}" download="${nombre}.svg" class="btn-download-item">
+        <span class="result-name">📄 ${nombre}.svg</span>
+        <a href="${url}" download="${nombre}.svg" class="btn-download-single">
           ⬇️ Descargar SVG
         </a>
       `;
