@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vectorizador de Imágenes y Camisetas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; color: #333; padding: 20px; text-align: center; }
+    .container { max-width: 800px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1 { color: #1a252f; margin-bottom: 10px; font-size: 26px; }
+    p { color: #666; font-size: 15px; margin-bottom: 25px; }
+    .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+    @media(max-width: 600px) { .card-grid { grid-template-columns: 1fr; } }
+    .card { border: 2px dashed #007bff; border-radius: 10px; padding: 20px; background: #f8fafd; text-align: center; }
+    .card h3 { color: #007bff; margin-bottom: 10px; }
+    .btn { display: inline-block; background: #007bff; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 15px; transition: background 0.3s; }
+    .btn:hover { background: #0056b3; }
+    .btn-green { background: #28a745; }
+    .btn-green:hover { background: #218838; }
+    .steps { text-align: left; background: #eef2f7; padding: 20px; border-radius: 8px; margin-top: 25px; }
+    .steps h4 { margin-bottom: 10px; color: #333; }
+    .steps ol { margin-left: 20px; color: #555; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🚀 Vectorizador Automático y Extractor de Arte</h1>
+    <p>Convierte lotes de 10 a más imágenes a formato vectorial editable en Adobe Illustrator (.SVG).</p>
+
+    <div class="card-grid">
+      <div class="card">
+        <h3>🖼️ Modo 1: Vectorización Normal</h3>
+        <p>Para imágenes, logos o ilustraciones estándar.</p>
+        <a href="https://github.com/kim0alberca/vectorizador-camisetas/upload/main/input_normal" target="_blank" class="btn">
+          Subir Imágenes Aqu&iacute;
+        </a>
+      </div>
+
+      <div class="card">
+        <h3>👕 Modo 2: Extractor de Camisetas</h3>
+        <p>Elimina tela, arrugas, prendas y extrae solo el arte plano.</p>
+        <a href="https://github.com/kim0alberca/vectorizador-camisetas/upload/main/input_camisetas" target="_blank" class="btn btn-green">
+          Subir Fotos de Camisetas
+        </a>
+      </div>
+    </div>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+      <h2>📦 Zona de Descarga de Vectores (.ZIP)</h2>
+      <p>Una vez subidas tus imágenes, el servidor tardará entre 1 y 2 minutos en procesarlas.</p>
+      <a href="https://github.com/kim0alberca/vectorizador-camisetas/actions" target="_blank" class="btn btn-green" style="font-size: 18px; padding: 15px 30px;">
+        ⬇️ Ver Progreso y Descargar Archivo WinRAR
+      </a>
+    </div>
+
+    <div class="steps">
+      <h4>📌 Instrucciones de uso rápido:</h4>
+      <ol>
+        <li>Haz clic en el botón azul o verde de arriba según lo que quieras procesar.</li>
+        <li>Arrastra y suelta tus **10 o más fotos** y presiona el botón verde de GitHub **Commit changes**.</li>
+        <li>Haz clic en el botón grande de **"Ver Progreso y Descargar Archivo WinRAR"**.</li>
+        <li>Cuando aparezca el check verde ($\checkmark$), baja a la sección **Artifacts** y descarga tu paquete de vectores listo para Illustrator.</li>
+      </ol>
+    </div>
+  </div>
+
+</body>
+</html>
