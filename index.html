@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro Instantáneo</title>
   
-  <!-- Librerías estables: ImageTracer, JSZip y FileSaver -->
+  <!-- Decodificador para archivos TIFF / TIF -->
+  <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
+  <!-- Librerías de Vectorización, JSZip y FileSaver -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -59,11 +61,11 @@
 
     <div class="card">
       <h3>📁 Seleccionar Imágenes para Vectorizar</h3>
-      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos (PNG, JPG). La conversión es instantánea.</p>
+      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos (PNG, JPG, TIFF, WEBP, BMP). La conversión es instantánea.</p>
       
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
         <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes</span>
-        <input type="file" id="inputImagenes" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta()">
+        <input type="file" id="inputImagenes" class="file-input" multiple accept="image/*,.tif,.tiff" onchange="actualizarEtiqueta()">
       </div>
       
       <button class="btn-select" onclick="procesarVectorizacion()">⚡ Vectorizar Imágenes Ahora</button>
@@ -108,7 +110,8 @@
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
         
         try {
-          const svgContent = await vectorizarConImageTracer(file);
+          const imgElement = await cargarImagenUniversal(file);
+          const svgContent = await vectorizarImagen(imgElement);
           const nombreSvg = file.name.substring(0, file.name.lastIndexOf('.')) + '.svg';
           svgResultados.push({ nombre: nombreSvg, contenido: svgContent });
         } catch (e) {
@@ -128,44 +131,82 @@
         `;
       } else {
         title.innerText = "Error en el procesamiento";
-        desc.innerText = "No se pudieron procesar las imágenes seleccionadas. Verifica el formato de tus archivos.";
+        desc.innerText = "No se pudieron procesar las imágenes seleccionadas. Verifica que los archivos no estén corruptos.";
       }
     }
 
-    function vectorizarConImageTracer(file) {
+    // Carga imágenes estándar (PNG, JPG, WEBP) y decodifica TIFF/TIF automáticamente
+    function cargarImagenUniversal(file) {
       return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onload = function() {
-            try {
-              // Opciones de trazado de alta calidad para serigrafía/vectorización
-              const options = {
-                corsenabled: false,
-                ltres: 1,
-                qtres: 1,
-                pathomit: 8,
-                colorsampling: 2,
-                numberofcolors: 16,
-                mincolorratio: 0.02,
-                colorquantcycles: 3
-              };
+        const esTiff = file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff');
 
-              const svgString = ImageTracer.imageToSVG(img, options);
-              if (svgString && svgString.length > 0) {
-                resolve(svgString);
-              } else {
-                reject("No se generó el SVG");
-              }
+        if (esTiff) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            try {
+              const buffer = e.target.result;
+              const ifds = UTIF.decode(buffer);
+              if (!ifds || ifds.length === 0) return reject("TIFF inválido o vacío");
+              
+              UTIF.decodeImage(buffer, ifds[0]);
+              const rgba = UTIF.toRGBA8(ifds[0]);
+              
+              const canvas = document.createElement('canvas');
+              canvas.width = ifds[0].width;
+              canvas.height = ifds[0].height;
+              
+              const ctx = canvas.getContext('2d');
+              const imgData = ctx.createImageData(canvas.width, canvas.height);
+              imgData.data.set(rgba);
+              ctx.putImageData(imgData, 0, 0);
+
+              const img = new Image();
+              img.onload = () => resolve(img);
+              img.onerror = () => reject("Error al convertir Canvas TIFF a Imagen");
+              img.src = canvas.toDataURL();
             } catch (err) {
               reject(err);
             }
           };
-          img.onerror = () => reject("Error al cargar la imagen");
-          img.src = e.target.result;
-        };
-        reader.onerror = () => reject("Error al leer el archivo");
-        reader.readAsDataURL(file);
+          reader.onerror = () => reject("Error al leer el archivo TIFF");
+          reader.readAsArrayBuffer(file);
+        } else {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject("Error al cargar la imagen estándar");
+            img.src = e.target.result;
+          };
+          reader.onerror = () => reject("Error al leer el archivo");
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function vectorizarImagen(img) {
+      return new Promise((resolve, reject) => {
+        try {
+          const options = {
+            corsenabled: false,
+            ltres: 1,
+            qtres: 1,
+            pathomit: 8,
+            colorsampling: 2,
+            numberofcolors: 16,
+            mincolorratio: 0.02,
+            colorquantcycles: 3
+          };
+
+          const svgString = ImageTracer.imageToSVG(img, options);
+          if (svgString && svgString.length > 0) {
+            resolve(svgString);
+          } else {
+            reject("No se pudo generar el SVG");
+          }
+        } catch (err) {
+          reject(err);
+        }
       });
     }
 
