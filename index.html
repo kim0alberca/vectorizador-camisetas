@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro Instantáneo</title>
   
-  <!-- Decodificador para archivos TIFF / TIF -->
-  <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
-  <!-- Librerías de Vectorización, JSZip y FileSaver -->
+  <!-- Decodificador Universal TIFF / TIF (Soporta LZW, Zip, CMYK) -->
+  <script src="https://cdn.jsdelivr.net/npm/tiff.js@1.0.0/tiff.min.js"></script>
+  <!-- Librería de Vectorización ImageTracer -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+  <!-- Manejo de Zip y Descargas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -82,6 +83,11 @@
   <script>
     let svgResultados = [];
 
+    // Inicializar Tiff.js en memoria
+    if (typeof Tiff !== 'undefined') {
+      Tiff.initialize({ TOTAL_MEMORY: 167772160 }); // 160MB de memoria asignada para TIFFs pesados
+    }
+
     function actualizarEtiqueta() {
       const files = document.getElementById('inputImagenes').files;
       document.getElementById('labelImagenes').innerText = files.length > 0 
@@ -110,12 +116,15 @@
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
         
         try {
-          const imgElement = await cargarImagenUniversal(file);
-          const svgContent = await vectorizarImagen(imgElement);
-          const nombreSvg = file.name.substring(0, file.name.lastIndexOf('.')) + '.svg';
-          svgResultados.push({ nombre: nombreSvg, contenido: svgContent });
+          const imgElement = await cargarCualquierImagen(file);
+          const svgContent = vectorizarConImageTracer(imgElement);
+          
+          if (svgContent) {
+            const nombreSinExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            svgResultados.push({ nombre: `${nombreSinExt}.svg`, contenido: svgContent });
+          }
         } catch (e) {
-          console.error("Error al procesar " + file.name, e);
+          console.error("Error al procesar el archivo: " + file.name, e);
         }
       }
 
@@ -131,39 +140,28 @@
         `;
       } else {
         title.innerText = "Error en el procesamiento";
-        desc.innerText = "No se pudieron procesar las imágenes seleccionadas. Verifica que los archivos no estén corruptos.";
+        desc.innerText = "No se pudieron procesar los archivos. Revisa que las imágenes tengan formato válido.";
       }
     }
 
-    // Carga imágenes estándar (PNG, JPG, WEBP) y decodifica TIFF/TIF automáticamente
-    function cargarImagenUniversal(file) {
+    // Decodifica imágenes normales Y archivos TIFF pesados o comprimidos
+    function cargarCualquierImagen(file) {
       return new Promise((resolve, reject) => {
-        const esTiff = file.name.toLowerCase().endsWith('.tif') || file.name.toLowerCase().endsWith('.tiff');
+        const extension = file.name.split('.').pop().toLowerCase();
 
-        if (esTiff) {
+        if (extension === 'tif' || extension === 'tiff') {
           const reader = new FileReader();
           reader.onload = function(e) {
             try {
-              const buffer = e.target.result;
-              const ifds = UTIF.decode(buffer);
-              if (!ifds || ifds.length === 0) return reject("TIFF inválido o vacío");
+              const tiff = new Tiff({ buffer: e.target.result });
+              const canvas = tiff.toCanvas();
               
-              UTIF.decodeImage(buffer, ifds[0]);
-              const rgba = UTIF.toRGBA8(ifds[0]);
-              
-              const canvas = document.createElement('canvas');
-              canvas.width = ifds[0].width;
-              canvas.height = ifds[0].height;
-              
-              const ctx = canvas.getContext('2d');
-              const imgData = ctx.createImageData(canvas.width, canvas.height);
-              imgData.data.set(rgba);
-              ctx.putImageData(imgData, 0, 0);
+              if (!canvas) return reject("No se pudo renderizar el TIFF");
 
               const img = new Image();
               img.onload = () => resolve(img);
-              img.onerror = () => reject("Error al convertir Canvas TIFF a Imagen");
-              img.src = canvas.toDataURL();
+              img.onerror = () => reject("Error al convertir el Canvas TIFF a Imagen");
+              img.src = canvas.toDataURL('image/png');
             } catch (err) {
               reject(err);
             }
@@ -184,30 +182,20 @@
       });
     }
 
-    function vectorizarImagen(img) {
-      return new Promise((resolve, reject) => {
-        try {
-          const options = {
-            corsenabled: false,
-            ltres: 1,
-            qtres: 1,
-            pathomit: 8,
-            colorsampling: 2,
-            numberofcolors: 16,
-            mincolorratio: 0.02,
-            colorquantcycles: 3
-          };
+    // Configuración robusta para ImageTracer
+    function vectorizarConImageTracer(img) {
+      const options = {
+        corsenabled: false,
+        ltres: 1,
+        qtres: 1,
+        pathomit: 8,
+        colorsampling: 2,
+        numberofcolors: 16,
+        mincolorratio: 0.02,
+        colorquantcycles: 3
+      };
 
-          const svgString = ImageTracer.imageToSVG(img, options);
-          if (svgString && svgString.length > 0) {
-            resolve(svgString);
-          } else {
-            reject("No se pudo generar el SVG");
-          }
-        } catch (err) {
-          reject(err);
-        }
-      });
+      return ImageTracer.imageToSVG(img, options);
     }
 
     function descargarZip() {
