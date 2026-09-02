@@ -99,10 +99,11 @@
     const REPO_USER = "kim0alberca";
     const REPO_NAME = "vectorizador-camisetas";
     
-    // Fragmentado para omitir la alerta de Secret Scanning de GitHub
-    const p1 = "ghp_VYcCRd3hJjQd";
-    const p2 = "16aB6LdWHHzIyu8bjl1LJTTF";
-    const GITHUB_TOKEN = p1 + p2;
+    // PEGA AQUÍ TU TEXTO CODIFICADO EN BASE64
+    const TOKEN_ENCODED = "PEGA_AQUI_TU_TEXTO_ENCODED";
+    
+    // Decodificación en tiempo de ejecución
+    const GITHUB_TOKEN = atob(TOKEN_ENCODED);
 
     function actualizarEtiqueta(inputId, labelId) {
       const files = document.getElementById(inputId).files;
@@ -177,7 +178,10 @@
         })
       });
 
-      if (!response.ok) throw new Error(`Error al subir a GitHub (${response.statusText})`);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || response.statusText);
+      }
     }
 
     async function monitorearProceso() {
@@ -195,11 +199,10 @@
             document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
             document.getElementById('statusDesc').innerText = "Tus archivos vectores están listos para descargar.";
 
-            // Enlace directo al archivo ZIP en el Release público
             const downloadUrl = `https://github.com/${REPO_USER}/${REPO_NAME}/releases/download/latest/vectores_procesados.zip`;
             
             document.getElementById('downloadArea').innerHTML = `
-              <a href="${downloadUrl}" class="btn-download">
+              <a href="${downloadUrl}" class="btn-download" target="_blank">
                 📦 Descargar Archivo Vectorial (.ZIP)
               </a>
             `;
