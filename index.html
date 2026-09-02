@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro Instantáneo</title>
   
-  <!-- Librería Potrace en navegador y empaquetador ZIP -->
-  <script src="https://cdn.jsdelivr.net/npm/potrace@2.1.8/index.min.js"></script>
+  <!-- Librerías estables: ImageTracer, JSZip y FileSaver -->
+  <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -37,13 +37,15 @@
     .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
 
     .file-input { display: none; }
-    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; }
+    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: opacity 0.2s; }
+    .btn-select:hover { opacity: 0.9; }
 
     .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; text-align: center; display: none; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 15px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .btn-download { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); border: none; cursor: pointer; display: inline-block; }
+    .btn-download { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); border: none; cursor: pointer; display: inline-block; transition: transform 0.2s; }
+    .btn-download:hover { transform: scale(1.03); }
   </style>
 </head>
 <body>
@@ -57,10 +59,10 @@
 
     <div class="card">
       <h3>📁 Seleccionar Imágenes para Vectorizar</h3>
-      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos. El proceso se realiza directamente en tu navegador.</p>
+      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos (PNG, JPG). La conversión es instantánea.</p>
       
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
-        <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes (PNG, JPG)</span>
+        <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes</span>
         <input type="file" id="inputImagenes" class="file-input" multiple accept="image/*" onchange="actualizarEtiqueta()">
       </div>
       
@@ -82,7 +84,7 @@
       const files = document.getElementById('inputImagenes').files;
       document.getElementById('labelImagenes').innerText = files.length > 0 
         ? `${files.length} archivo(s) seleccionado(s)` 
-        : 'Haz clic o arrastra aquí tus imágenes (PNG, JPG)';
+        : 'Haz clic o arrastra aquí tus imágenes';
     }
 
     async function procesarVectorizacion() {
@@ -106,7 +108,7 @@
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
         
         try {
-          const svgContent = await vectorizarImagen(file);
+          const svgContent = await vectorizarConImageTracer(file);
           const nombreSvg = file.name.substring(0, file.name.lastIndexOf('.')) + '.svg';
           svgResultados.push({ nombre: nombreSvg, contenido: svgContent });
         } catch (e) {
@@ -115,34 +117,54 @@
       }
 
       spinner.style.display = 'none';
-      title.innerText = "¡Proceso Completado!";
-      desc.innerText = `Se han generado ${svgResultados.length} archivo(s) SVG correctamente.`;
-
-      downloadArea.innerHTML = `
-        <button onclick="descargarZip()" class="btn-download">
-          📦 Descargar Archivos Vectoriales (.ZIP)
-        </button>
-      `;
+      
+      if (svgResultados.length > 0) {
+        title.innerText = "¡Proceso Completado!";
+        desc.innerText = `Se han generado ${svgResultados.length} archivo(s) SVG correctamente.`;
+        downloadArea.innerHTML = `
+          <button onclick="descargarZip()" class="btn-download">
+            📦 Descargar Archivos Vectoriales (.ZIP)
+          </button>
+        `;
+      } else {
+        title.innerText = "Error en el procesamiento";
+        desc.innerText = "No se pudieron procesar las imágenes seleccionadas. Verifica el formato de tus archivos.";
+      }
     }
 
-    function vectorizarImagen(file) {
+    function vectorizarConImageTracer(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
             try {
-              Potrace.loadImage(img);
-              Potrace.process(function() {
-                const svg = Potrace.getSVG(1);
-                resolve(svg);
-              });
+              // Opciones de trazado de alta calidad para serigrafía/vectorización
+              const options = {
+                corsenabled: false,
+                ltres: 1,
+                qtres: 1,
+                pathomit: 8,
+                colorsampling: 2,
+                numberofcolors: 16,
+                mincolorratio: 0.02,
+                colorquantcycles: 3
+              };
+
+              const svgString = ImageTracer.imageToSVG(img, options);
+              if (svgString && svgString.length > 0) {
+                resolve(svgString);
+              } else {
+                reject("No se generó el SVG");
+              }
             } catch (err) {
               reject(err);
             }
           };
+          img.onerror = () => reject("Error al cargar la imagen");
           img.src = e.target.result;
         };
+        reader.onerror = () => reject("Error al leer el archivo");
         reader.readAsDataURL(file);
       });
     }
