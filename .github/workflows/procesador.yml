@@ -1,4 +1,4 @@
-name: Procesador Vectorial y Extractor de Camisetas
+name: Procesador de Vectores y Camisetas
 
 on:
   push:
@@ -7,40 +7,53 @@ on:
       - 'input_camisetas/**'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   procesar:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar el código fuente
-        uses: actions/checkout@v3
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
 
-      - name: Configurar Python 3.10
-        uses: actions/setup-python@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Instalar herramientas de procesamiento
+      - name: Instalar dependencias del sistema y Python
         run: |
+          sudo apt-get update
+          sudo apt-get install -y potrace potrace-extra
           python -m pip install --upgrade pip
-          pip install vtracer rembg Pillow
+          pip install opencv-python pillow numpy
 
       - name: Procesar Vectorización Normal
-        run: python script_vectorizar.py
+        run: |
+          python script_vectorizar.py
 
-      - name: Extraer y Vectorizar Camisetas
-        run: python script_extraer_camisetas.py
+      - name: Procesar Extracción de Camisetas
+        run: |
+          python script_extraer_camisetas.py
 
-      - name: Subir ZIP Vectorial Normal
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Crear archivo comprimido ZIP
+        run: |
+          mkdir -p resultados
+          if [ -d "output_svg" ] && [ "$(ls -A output_svg)" ]; then
+            cp output_svg/* resultados/ 2>/dev/null || true
+          fi
+          if [ -d "output_camisetas" ] && [ "$(ls -A output_camisetas)" ]; then
+            cp output_camisetas/* resultados/ 2>/dev/null || true
+          fi
+          cd resultados && zip -r ../vectores_procesados.zip . && cd ..
+
+      - name: Publicar Release para descarga directa
+        uses: softprops/action-gh-release@v1
         with:
-          name: Vectores-Normales-WinRAR
-          path: output_normal/vectores_normales.zip
-
-      - name: Subir ZIP Artes de Camisetas
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artes-Camisetas-Vectorizados-WinRAR
-          path: output_camisetas/artes_camisetas_vectorizados.zip
+          tag_name: latest
+          name: Vectores Procesados
+          files: vectores_procesados.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
