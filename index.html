@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro Instantáneo</title>
   
-  <!-- Decodificador Universal TIFF / TIF (Soporta LZW, Zip, CMYK) -->
+  <!-- Decodificador TIFF universal -->
   <script src="https://cdn.jsdelivr.net/npm/tiff.js@1.0.0/tiff.min.js"></script>
-  <!-- Librería de Vectorización ImageTracer -->
+  <!-- Vectorizador ImageTracer -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
-  <!-- Manejo de Zip y Descargas -->
+  <!-- JSZip y FileSaver -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -49,6 +49,8 @@
 
     .btn-download { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 10px; font-size: 18px; margin-top: 15px; box-shadow: 0 0 20px rgba(0,230,118,0.4); border: none; cursor: pointer; display: inline-block; transition: transform 0.2s; }
     .btn-download:hover { transform: scale(1.03); }
+    
+    .error-log { color: #ff5252; font-size: 13px; margin-top: 15px; text-align: left; background: rgba(255,0,0,0.1); padding: 10px; border-radius: 6px; display: none; }
   </style>
 </head>
 <body>
@@ -62,11 +64,11 @@
 
     <div class="card">
       <h3>📁 Seleccionar Imágenes para Vectorizar</h3>
-      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube logos o artes gráficos (PNG, JPG, TIFF, WEBP, BMP). La conversión es instantánea.</p>
+      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube cualquier tipo de imagen (PNG, JPG, TIFF, WEBP, sin extensión). La conversión es instantánea.</p>
       
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
         <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes</span>
-        <input type="file" id="inputImagenes" class="file-input" multiple accept="image/*,.tif,.tiff" onchange="actualizarEtiqueta()">
+        <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
       <button class="btn-select" onclick="procesarVectorizacion()">⚡ Vectorizar Imágenes Ahora</button>
@@ -77,15 +79,20 @@
       <h2 id="statusTitle">Procesando vectores...</h2>
       <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Renderizando gráficos vectoriales SVG...</p>
       <div id="downloadArea" style="margin-top: 20px;"></div>
+      <div id="errorLog" class="error-log"></div>
     </div>
   </div>
 
   <script>
     let svgResultados = [];
 
-    // Inicializar Tiff.js en memoria
+    // Inicializar Tiff.js si existe
     if (typeof Tiff !== 'undefined') {
-      Tiff.initialize({ TOTAL_MEMORY: 167772160 }); // 160MB de memoria asignada para TIFFs pesados
+      try {
+        Tiff.initialize({ TOTAL_MEMORY: 167772160 });
+      } catch (e) {
+        console.warn("Tiff init error:", e);
+      }
     }
 
     function actualizarEtiqueta() {
@@ -104,27 +111,37 @@
       const title = document.getElementById('statusTitle');
       const desc = document.getElementById('statusDesc');
       const downloadArea = document.getElementById('downloadArea');
+      const errorLog = document.getElementById('errorLog');
 
       panel.style.display = 'block';
       spinner.style.display = 'block';
       downloadArea.innerHTML = '';
+      errorLog.style.display = 'none';
+      errorLog.innerHTML = '';
       title.innerText = "Vectorizando imágenes...";
       svgResultados = [];
+      let errores = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
         
         try {
-          const imgElement = await cargarCualquierImagen(file);
+          const imgElement = await cargarImagenAgnostica(file);
           const svgContent = vectorizarConImageTracer(imgElement);
           
-          if (svgContent) {
-            const nombreSinExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-            svgResultados.push({ nombre: `${nombreSinExt}.svg`, contenido: svgContent });
+          if (svgContent && svgContent.length > 0) {
+            // Generar un nombre seguro eliminando extensiones si las hay
+            let nombreLimpio = file.name.replace(/\.[^/.]+$/, "");
+            if (!nombreLimpio) nombreLimpio = `vector_${i + 1}`;
+            
+            svgResultados.push({ nombre: `${nombreLimpio}.svg`, contenido: svgContent });
+          } else {
+            errores.push(`${file.name}: No se pudo extraer la ruta del SVG.`);
           }
         } catch (e) {
-          console.error("Error al procesar el archivo: " + file.name, e);
+          console.error("Error al procesar: " + file.name, e);
+          errores.push(`${file.name}: ${e.message || e}`);
         }
       }
 
@@ -132,7 +149,7 @@
       
       if (svgResultados.length > 0) {
         title.innerText = "¡Proceso Completado!";
-        desc.innerText = `Se han generado ${svgResultados.length} archivo(s) SVG correctamente.`;
+        desc.innerText = `Se han generado ${svgResultados.length} de ${files.length} archivo(s) SVG correctamente.`;
         downloadArea.innerHTML = `
           <button onclick="descargarZip()" class="btn-download">
             📦 Descargar Archivos Vectoriales (.ZIP)
@@ -140,49 +157,61 @@
         `;
       } else {
         title.innerText = "Error en el procesamiento";
-        desc.innerText = "No se pudieron procesar los archivos. Revisa que las imágenes tengan formato válido.";
+        desc.innerText = "No se pudieron procesar las imágenes seleccionadas.";
+      }
+
+      if (errores.length > 0) {
+        errorLog.style.display = 'block';
+        errorLog.innerHTML = "<strong>Detalles de lectura:</strong><br>" + errores.join("<br>");
       }
     }
 
-    // Decodifica imágenes normales Y archivos TIFF pesados o comprimidos
-    function cargarCualquierImagen(file) {
+    // Lee cualquier archivo por su contenido real sin depender de su extensión
+    function cargarImagenAgnostica(file) {
       return new Promise((resolve, reject) => {
-        const extension = file.name.split('.').pop().toLowerCase();
+        const esTiff = file.name.toLowerCase().endsWith('.tif') || 
+                       file.name.toLowerCase().endsWith('.tiff') || 
+                       file.type.includes('tiff');
 
-        if (extension === 'tif' || extension === 'tiff') {
+        if (esTiff && typeof Tiff !== 'undefined') {
           const reader = new FileReader();
           reader.onload = function(e) {
             try {
               const tiff = new Tiff({ buffer: e.target.result });
               const canvas = tiff.toCanvas();
-              
-              if (!canvas) return reject("No se pudo renderizar el TIFF");
+              if (!canvas) return reject("Error al renderizar estructura TIFF");
 
               const img = new Image();
               img.onload = () => resolve(img);
-              img.onerror = () => reject("Error al convertir el Canvas TIFF a Imagen");
+              img.onerror = () => reject("Error al convertir Canvas TIFF");
               img.src = canvas.toDataURL('image/png');
             } catch (err) {
-              reject(err);
+              // Si falla como TIFF, intenta cargarlo como imagen normal
+              cargarComoImagenEstandar(file).then(resolve).catch(reject);
             }
           };
-          reader.onerror = () => reject("Error al leer el archivo TIFF");
+          reader.onerror = () => reject("Error al leer archivo como ArrayBuffer");
           reader.readAsArrayBuffer(file);
         } else {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => reject("Error al cargar la imagen estándar");
-            img.src = e.target.result;
-          };
-          reader.onerror = () => reject("Error al leer el archivo");
-          reader.readAsDataURL(file);
+          cargarComoImagenEstandar(file).then(resolve).catch(reject);
         }
       });
     }
 
-    // Configuración robusta para ImageTracer
+    function cargarComoImagenEstandar(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject("El navegador no pudo interpretar el formato visual de este archivo.");
+          img.src = e.target.result;
+        };
+        reader.onerror = () => reject("Error al leer datos con DataURL");
+        reader.readAsDataURL(file);
+      });
+    }
+
     function vectorizarConImageTracer(img) {
       const options = {
         corsenabled: false,
