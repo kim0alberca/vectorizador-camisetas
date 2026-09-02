@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro & Extractor de Camisetas</title>
   
-  <!-- Librerías para empaquetar y descargar ZIP directamente -->
+  <!-- Librerías para JSZip y FileSaver -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -129,7 +129,7 @@
         }
 
         title.innerText = "Procesando vectores en la nube...";
-        desc.innerText = "El servidor está convirtiendo tus imágenes a SVG. Esto tomará entre 1 a 2 minutos...";
+        desc.innerText = "El servidor está procesando tus imágenes. Por favor espera a que se complete...";
 
         monitorearProceso();
 
@@ -191,15 +191,19 @@
 
           if (ultimoRun && ultimoRun.status === 'completed') {
             clearInterval(interval);
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
-            document.getElementById('statusDesc').innerText = "Tus archivos vectores están listos para empaquetar y descargar.";
+            
+            // Pausa de 3 segundos para asegurar la sincronización del repositorio
+            setTimeout(() => {
+              document.getElementById('spinner').style.display = 'none';
+              document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
+              document.getElementById('statusDesc').innerText = "Tus vectores SVG han sido generados con éxito.";
 
-            document.getElementById('downloadArea').innerHTML = `
-              <button onclick="descargarZipDirecto()" class="btn-download">
-                📦 Descargar Archivo Vectorial (.ZIP)
-              </button>
-            `;
+              document.getElementById('downloadArea').innerHTML = `
+                <button onclick="descargarZipDirecto()" class="btn-download">
+                  📦 Descargar Archivo Vectorial (.ZIP)
+                </button>
+              `;
+            }, 3000);
           }
         } catch (e) {
           console.error("Error al monitorear el proceso:", e);
@@ -207,39 +211,51 @@
       }, 5000);
     }
 
-    // Busca archivos en todo el repositorio recursivamente
-    async function buscarArchivosRecursivo(path = '') {
-      let url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${path}`;
-      const res = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-      if (!res.ok) return [];
+    // Busca archivos SVG en carpetas habituales o en el root
+    async function obtenerArchivosSVG() {
+      const carpetas = ['output_normal', 'output_camisetas', 'output_svg', 'resultados', ''];
+      let todosLosArchivos = [];
 
-      const items = await res.json();
-      let resultados = [];
-
-      for (let item of items) {
-        if (item.type === 'dir') {
-          const subItems = await buscarArchivosRecursivo(item.path);
-          resultados = resultados.concat(subItems);
-        } else if (item.name.toLowerCase().endsWith('.svg')) {
-          resultados.push(item);
-        }
+      for (let folder of carpetas) {
+        try {
+          const url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${folder}`;
+          const res = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              const svgs = data.filter(item => item.name.toLowerCase().endsWith('.svg'));
+              todosLosArchivos = todosLosArchivos.concat(svgs);
+            }
+          }
+        } catch (e) {}
       }
-      return resultados;
+
+      // Elimina duplicados por SHA/Path
+      const unicos = Array.from(new Set(todosLosArchivos.map(a => a.path)))
+        .map(path => todosLosArchivos.find(a => a.path === path));
+
+      return unicos;
     }
 
     async function descargarZipDirecto() {
       const btn = document.querySelector('.btn-download');
-      btn.innerText = "Buscando archivos SVG...";
+      btn.innerText = "Empaquetando vectores...";
       btn.disabled = true;
 
       try {
-        const svgFiles = await buscarArchivosRecursivo();
+        let svgFiles = await obtenerArchivosSVG();
 
+        // Reintento automático si GitHub aún no refrescó la API
         if (svgFiles.length === 0) {
-          throw new Error("No se encontró ningún archivo .SVG procesado en el repositorio.");
+          btn.innerText = "Sincronizando archivos...";
+          await new Promise(r => setTimeout(r, 4000));
+          svgFiles = await obtenerArchivosSVG();
         }
 
-        btn.innerText = "Empaquetando ZIP...";
+        if (svgFiles.length === 0) {
+          throw new Error("Aún no se detectan archivos .SVG en el repositorio. Verifica que tu Action haya terminado correctamente en GitHub.");
+        }
+
         const zip = new JSZip();
 
         for (let item of svgFiles) {
@@ -254,7 +270,7 @@
         btn.innerText = "📦 Descargar Archivo Vectorial (.ZIP)";
         btn.disabled = false;
       } catch (err) {
-        alert("Error al empaquetar el ZIP: " + err.message);
+        alert("Aviso: " + err.message);
         btn.innerText = "Intentar de nuevo";
         btn.disabled = false;
       }
