@@ -30,6 +30,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install opencv-python pillow numpy
 
+      - name: Crear carpetas de salida si no existen
+        run: |
+          mkdir -p output_normal output_camisetas output_svg
+
       - name: Procesar Vectorización Normal
         run: |
           python script_vectorizar.py
@@ -38,22 +42,17 @@ jobs:
         run: |
           python script_extraer_camisetas.py
 
-      - name: Crear archivo comprimido ZIP
+      - name: Mover archivos a carpetas correspondientes
         run: |
-          mkdir -p resultados
+          # Si script_vectorizar genera en output_svg, aseguramos moverlos a output_normal
           if [ -d "output_svg" ] && [ "$(ls -A output_svg)" ]; then
-            cp output_svg/* resultados/ 2>/dev/null || true
+            cp output_svg/* output_normal/ 2>/dev/null || true
           fi
-          if [ -d "output_camisetas" ] && [ "$(ls -A output_camisetas)" ]; then
-            cp output_camisetas/* resultados/ 2>/dev/null || true
-          fi
-          cd resultados && zip -r ../vectores_procesados.zip . && cd ..
 
-      - name: Publicar Release para descarga directa
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: latest
-          name: Vectores Procesados
-          files: vectores_procesados.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Subir cambios y vectores al repositorio
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add output_normal/ output_camisetas/ output_svg/ 2>/dev/null || true
+          git commit -m "Auto-generación de vectores SVG" || exit 0
+          git push
