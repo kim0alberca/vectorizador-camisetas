@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vectorizador Pro & Extractor de Camisetas</title>
   
-  <!-- Librerías para generar y descargar ZIP desde JS -->
+  <!-- Librerías para empaquetar y descargar ZIP directamente -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -102,8 +102,6 @@
     const p2 = "C2HOVU6sroJ4hO12y13j";
     const GITHUB_TOKEN = p1 + p2;
 
-    let carpetaActual = "";
-
     function actualizarEtiqueta(inputId, labelId) {
       const files = document.getElementById(inputId).files;
       document.getElementById(labelId).innerText = files.length > 0 ? `${files.length} archivo(s) seleccionado(s)` : 'Seleccionar imágenes';
@@ -112,8 +110,6 @@
     async function procesarSubida(inputId, carpetaDestino) {
       const files = document.getElementById(inputId).files;
       if (files.length === 0) return alert("Por favor, selecciona al menos una imagen.");
-
-      carpetaActual = carpetaDestino === 'input_normal' ? 'output_normal' : 'output_camisetas';
 
       const panel = document.getElementById('statusPanel');
       const title = document.getElementById('statusTitle');
@@ -133,7 +129,7 @@
         }
 
         title.innerText = "Procesando vectores en la nube...";
-        desc.innerText = "El servidor está convirtiendo tus imágenes a SVG. Esperando respuesta...";
+        desc.innerText = "El servidor está convirtiendo tus imágenes a SVG. Esto tomará entre 1 a 2 minutos...";
 
         monitorearProceso();
 
@@ -197,7 +193,7 @@
             clearInterval(interval);
             document.getElementById('spinner').style.display = 'none';
             document.getElementById('statusTitle').innerText = "¡Proceso Completado!";
-            document.getElementById('statusDesc').innerText = "Tus archivos vectores están listos para generar el empaque.";
+            document.getElementById('statusDesc').innerText = "Tus archivos vectores están listos para empaquetar y descargar.";
 
             document.getElementById('downloadArea').innerHTML = `
               <button onclick="descargarZipDirecto()" class="btn-download">
@@ -211,29 +207,45 @@
       }, 5000);
     }
 
+    // Busca archivos en todo el repositorio recursivamente
+    async function buscarArchivosRecursivo(path = '') {
+      let url = `https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${path}`;
+      const res = await fetch(url, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+      if (!res.ok) return [];
+
+      const items = await res.json();
+      let resultados = [];
+
+      for (let item of items) {
+        if (item.type === 'dir') {
+          const subItems = await buscarArchivosRecursivo(item.path);
+          resultados = resultados.concat(subItems);
+        } else if (item.name.toLowerCase().endsWith('.svg')) {
+          resultados.push(item);
+        }
+      }
+      return resultados;
+    }
+
     async function descargarZipDirecto() {
       const btn = document.querySelector('.btn-download');
-      btn.innerText = "Generando ZIP...";
+      btn.innerText = "Buscando archivos SVG...";
       btn.disabled = true;
 
       try {
-        // Consultar la carpeta donde se guardaron los resultados SVG
-        const folderPath = carpetaActual || 'output_normal';
-        const res = await fetch(`https://api.github.com/repos/${REPO_USER}/${REPO_NAME}/contents/${folderPath}`, {
-          headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-        });
+        const svgFiles = await buscarArchivosRecursivo();
 
-        if (!res.ok) throw new Error("No se encontraron los vectores procesados.");
+        if (svgFiles.length === 0) {
+          throw new Error("No se encontró ningún archivo .SVG procesado en el repositorio.");
+        }
 
-        const files = await res.json();
+        btn.innerText = "Empaquetando ZIP...";
         const zip = new JSZip();
 
-        for (let item of files) {
-          if (item.name.endsWith('.svg') || item.name.endsWith('.png')) {
-            const fileRes = await fetch(item.download_url);
-            const blob = await fileRes.blob();
-            zip.file(item.name, blob);
-          }
+        for (let item of svgFiles) {
+          const fileRes = await fetch(item.download_url);
+          const blob = await fileRes.blob();
+          zip.file(item.name, blob);
         }
 
         const zipBlob = await zip.generateAsync({ type: "blob" });
