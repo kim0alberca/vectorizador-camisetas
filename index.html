@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador HD Pro - Conservar Colores</title>
+  <title>Vectorizador Ultra HD - Auto-Adaptativo</title>
   
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
@@ -27,17 +27,15 @@
     h1 { font-size: 32px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
     p.subtitle { color: var(--text-dim); font-size: 16px; }
 
-    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; margin-bottom: 30px; }
-    
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; text-align: left; }
-    .option-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--accent-cyan); }
-    .option-group select { width: 100%; padding: 10px; background: #0d1117; border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-size: 14px; }
+    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; margin-bottom: 30px; text-align: center; }
 
-    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 20px; transition: 0.2s; }
+    .auto-badge { display: inline-block; background: rgba(0,242,254,0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+
+    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 40px 20px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 20px; transition: 0.2s; }
     .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
 
     .file-input { display: none; }
-    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: opacity 0.2s; }
+    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 16px 32px; border: none; border-radius: 8px; cursor: pointer; font-size: 17px; width: 100%; transition: opacity 0.2s; }
     .btn-select:hover { opacity: 0.9; }
 
     .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; text-align: center; display: none; }
@@ -46,7 +44,9 @@
 
     .results-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; }
     .result-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 14px 20px; border-radius: 10px; border: 1px solid var(--border-color); }
+    .result-info { display: flex; flex-direction: column; gap: 4px; }
     .result-name { font-weight: 600; color: #fff; word-break: break-all; }
+    .result-meta { font-size: 12px; color: var(--accent-cyan); }
 
     .btn-download-single { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; transition: transform 0.2s; display: inline-block; white-space: nowrap; }
     .btn-download-single:hover { transform: scale(1.03); }
@@ -58,50 +58,25 @@
 
   <div class="container">
     <header>
-      <h1>Vectorizador HD (Fidelidad de Color)</h1>
-      <p class="subtitle">Preserva los colores originales y perfecciona los bordes de letras y vectores</p>
+      <h1>Vectorizador Ultra HD - Auto-Adaptativo</h1>
+      <p class="subtitle">Ajuste inteligente de color y trazado limpio según la imagen</p>
     </header>
 
     <div class="card">
-      <div class="options-grid">
-        <div class="option-group">
-          <label for="modeSelect">Modo de Color:</label>
-          <select id="modeSelect">
-            <option value="color" selected>Color Real (Fiel a la Imagen)</option>
-            <option value="bw">Monocromo / Solo B/N</option>
-          </select>
-        </div>
-        <div class="option-group">
-          <label for="colorsCount">Cantidad de Colores:</label>
-          <select id="colorsCount">
-            <option value="16" selected>16 Colores (Recomendado Logos)</option>
-            <option value="32">32 Colores (Detalle Alto)</option>
-            <option value="64">64 Colores (Máxima Fidelidad)</option>
-            <option value="8">8 Colores (Diseño Simple)</option>
-          </select>
-        </div>
-        <div class="option-group">
-          <label for="smoothSelect">Suavizado de Bordes:</label>
-          <select id="smoothSelect">
-            <option value="ultra" selected>Ultra-Suave (Letras y Círculos)</option>
-            <option value="balanced">Balanceado</option>
-            <option value="sharp">Bordes Rectos / Geométricos</option>
-          </select>
-        </div>
-      </div>
+      <div class="auto-badge">✨ Motor IA Ligero: Detecta colores y suaviza bordes automáticamente</div>
 
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
         <span id="labelImagenes">📁 Haz clic o arrastra aquí tus imágenes</span>
         <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
-      <button class="btn-select" onclick="procesarVectorizacionHD()">⚡ Vectorizar Mantenimiento Colores</button>
+      <button class="btn-select" onclick="procesarVectorizacionAuto()">🚀 Vectorizar Automáticamente</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Procesando imagen...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Renderizando paleta de colores y mejorando trazos...</p>
+      <h2 id="statusTitle">Analizando imagen...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Calculando densidad de color y mejorando curvatura de vectores...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
       <div id="errorLog" class="error-log"></div>
@@ -116,7 +91,7 @@
         : '📁 Haz clic o arrastra aquí tus imágenes';
     }
 
-    async function procesarVectorizacionHD() {
+    async function procesarVectorizacionAuto() {
       const files = document.getElementById('inputImagenes').files;
       if (files.length === 0) return alert("Por favor, selecciona al menos una imagen.");
 
@@ -132,31 +107,27 @@
       resultsGrid.innerHTML = '';
       errorLog.style.display = 'none';
       errorLog.innerHTML = '';
-      title.innerText = "Vectorizando a Color HD...";
+      title.innerText = "Procesando Imágenes...";
 
       let procesadosExitosos = 0;
       let errores = [];
 
-      const modo = document.getElementById('modeSelect').value;
-      const numColores = parseInt(document.getElementById('colorsCount').value, 10);
-      const suavizado = document.getElementById('smoothSelect').value;
-
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
+        desc.innerText = `Analizando (${i + 1}/${files.length}): ${file.name}`;
         
         await new Promise(resolve => setTimeout(resolve, 80));
 
         try {
-          const imageData = await preprocesarImagenSuperHD(file, modo);
-          let svgContent = vectorizarConAltaCalidad(imageData, modo, numColores, suavizado);
+          const { imageData, configAuto } = await preprocesarYAnalizarImagen(file);
+          let svgContent = ImageTracer.imagedataToSVG(imageData, configAuto);
 
           if (svgContent && svgContent.length > 100) {
             let nombreLimpio = file.name.replace(/\.[^/.]+$/, "") || `vector_${i + 1}`;
-            agregarFilaDescarga(nombreLimpio, svgContent);
+            agregarFilaDescarga(nombreLimpio, svgContent, configAuto._metaInfo);
             procesadosExitosos++;
           } else {
-            errores.push(`${file.name}: No se generó estructura SVG.`);
+            errores.push(`${file.name}: No se pudo generar la estructura SVG.`);
           }
         } catch (e) {
           console.error(e);
@@ -167,8 +138,8 @@
       spinner.style.display = 'none';
 
       if (procesadosExitosos > 0) {
-        title.innerText = "¡Vectorización Completada con Éxito!";
-        desc.innerText = "Descarga tus archivos SVG a color:";
+        title.innerText = "¡Vectorización Completada!";
+        desc.innerText = "Tus imágenes han sido analizadas y adaptadas automáticamente:";
       } else {
         title.innerText = "Error en el procesamiento";
         desc.innerText = "Revisa las alertas para más detalles.";
@@ -176,19 +147,20 @@
 
       if (errores.length > 0) {
         errorLog.style.display = 'block';
-        errorLog.innerHTML = "<strong>Detalles de lectura:</strong><br>" + errores.join("<br>");
+        errorLog.innerHTML = "<strong>Detalles:</strong><br>" + errores.join("<br>");
       }
     }
 
-    // Escalado 4X manteniendo datos de color RGB
-    function preprocesarImagenSuperHD(file, modo) {
+    // Preprocesado con análisis de píxeles para configuración adaptativa
+    function preprocesarYAnalizarImagen(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
             const canvas = document.createElement('canvas');
-            const scale = 3; // Escalado 3X óptimo para conservar color y no saturar memoria
+            // Escalado 3x con suavizado para evitar serruchos en tipografía
+            const scale = 3; 
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
             
@@ -199,20 +171,61 @@
 
             try {
               const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              
-              if (modo === 'bw') {
-                const data = imgData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                  const lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                  const val = lum > 160 ? 255 : 0;
-                  data[i] = data[i+1] = data[i+2] = val;
-                }
-                ctx.putImageData(imgData, 0, 0);
+              const data = imgData.data;
+
+              // Muestreo de colores únicos para detectar complejidad
+              const colorSet = new Set();
+              const step = 16; // Mapeo rápido cada 16px para mejor rendimiento
+              for (let i = 0; i < data.length; i += 4 * step) {
+                const r = Math.round(data[i] / 32) * 32;
+                const g = Math.round(data[i+1] / 32) * 32;
+                const b = Math.round(data[i+2] / 32) * 32;
+                colorSet.add(`${r},${g},${b}`);
               }
 
-              resolve(imgData);
+              const numColoresDetectados = colorSet.size;
+              let numColoresFinal = 16;
+              let pathOmitVal = 4; // Elimina ruido de orillas
+              let ltresVal = 0.01;
+              let qtresVal = 0.01;
+              let metaInfo = "";
+
+              if (numColoresDetectados <= 4) {
+                numColoresFinal = 4;
+                pathOmitVal = 8; // Filtra imperfecciones mayores en texto/logos
+                metaInfo = "Modo: Arte Plano / Texto (Alta Precisión)";
+              } else if (numColoresDetectados <= 12) {
+                numColoresFinal = 8;
+                pathOmitVal = 6;
+                metaInfo = "Modo: Ilustración Simple";
+              } else if (numColoresDetectados <= 28) {
+                numColoresFinal = 24;
+                pathOmitVal = 3;
+                metaInfo = "Modo: Diseño Multicolor";
+              } else {
+                numColoresFinal = 48;
+                pathOmitVal = 2;
+                metaInfo = "Modo: Gráficos Complejos";
+              }
+
+              const configAuto = {
+                corsenabled: false,
+                ltres: ltresVal,
+                qtres: qtresVal,
+                pathomit: pathOmitVal,
+                rightangleenhance: true,
+                colorsampling: 2,
+                numberofcolors: numColoresFinal,
+                mincolorratio: 0.002,
+                colorquantcycles: 5,
+                strokewidth: 0,
+                linefilter: true,
+                _metaInfo: metaInfo
+              };
+
+              resolve({ imageData: imgData, configAuto: configAuto });
             } catch (err) {
-              reject(new Error("Error procesando matriz gráfica."));
+              reject(new Error("Error procesando los datos de la imagen."));
             }
           };
           img.onerror = () => reject(new Error("La imagen cargada no se pudo procesar."));
@@ -223,37 +236,7 @@
       });
     }
 
-    // Trazado vectorial ajustado para paleta multitono
-    function vectorizarConAltaCalidad(imageData, modo, numColores, suavizado) {
-      let ltresVal = 0.01;
-      let qtresVal = 0.01;
-
-      if (suavizado === 'balanced') {
-        ltresVal = 0.1;
-        qtresVal = 0.1;
-      } else if (suavizado === 'sharp') {
-        ltresVal = 1.0;
-        qtresVal = 1.0;
-      }
-
-      const options = {
-        corsenabled: false,
-        ltres: ltresVal,
-        qtres: qtresVal,
-        pathomit: 2,
-        rightangleenhance: true,
-        colorsampling: modo === 'bw' ? 0 : 2,
-        numberofcolors: modo === 'bw' ? 2 : numColores,
-        mincolorratio: 0.005,
-        colorquantcycles: 5,
-        strokewidth: 0,
-        linefilter: true
-      };
-
-      return ImageTracer.imagedataToSVG(imageData, options);
-    }
-
-    function agregarFilaDescarga(nombre, svgContent) {
+    function agregarFilaDescarga(nombre, svgContent, metaInfo) {
       const resultsGrid = document.getElementById('resultsGrid');
       
       const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
@@ -262,9 +245,12 @@
       const row = document.createElement('div');
       row.className = 'result-row';
       row.innerHTML = `
-        <span class="result-name">🎨 ${nombre}_Color_HD.svg</span>
-        <a href="${url}" download="${nombre}_Color_HD.svg" class="btn-download-single">
-          ⬇️ Descargar SVG a Color
+        <div class="result-info">
+          <span class="result-name">🎨 ${nombre}_Vector.svg</span>
+          <span class="result-meta">⚡ ${metaInfo}</span>
+        </div>
+        <a href="${url}" download="${nombre}_Vector.svg" class="btn-download-single">
+          ⬇️ Descargar SVG
         </a>
       `;
       resultsGrid.appendChild(row);
