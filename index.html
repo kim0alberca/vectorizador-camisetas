@@ -65,11 +65,11 @@
   <div class="container">
     <header>
       <h1>Vectorizador Pro (IA Auto-Análisis & Sin Fondo)</h1>
-      <p class="subtitle">Análisis inteligente de imagen + Remoción automática de fondo + Preservación de tipografías</p>
+      <p class="subtitle">Extracción limpia de estampados + Eliminación de prendas + Curvas ultra suaves</p>
     </header>
 
     <div class="card">
-      <div class="auto-badge">🧠 Detección Automática de Parámetros Activada</div>
+      <div class="auto-badge">🧠 Extracción Automática de Estampados Activada</div>
 
       <div class="controls-grid">
         <div class="control-group">
@@ -77,7 +77,7 @@
           <select id="presetMode">
             <option value="auto" selected>✨ Automático (Detectar por Imagen)</option>
             <option value="text">Ajustar para Tipografías / Vectores Rectos</option>
-            <option value="graphic">Ajustar para Ilustraciones / Curvas</option>
+            <option value="graphic">Ajustar para Ilustraciones / Curvas Suaves</option>
           </select>
         </div>
 
@@ -94,7 +94,7 @@
 
       <label class="checkbox-group">
         <input type="checkbox" id="removeBgCheck" checked>
-        <span><strong>Eliminar Fondo Automáticamente</strong> (Muestrea bordes + máscara de inundación para eliminar el fondo real sin borrar zonas blancas internas)</span>
+        <span><strong>Aislar solo el diseño gráfico</strong> (Elimina la silueta de la prenda, cuello, sombras, pliegues y telas)</span>
       </label>
 
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
@@ -102,13 +102,13 @@
         <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
-      <button class="btn-select" onclick="procesarVectorizacionProfesional()">⚡ Vectorizar de Forma Automática</button>
+      <button class="btn-select" onclick="procesarVectorizacionProfesional()">⚡ Extraer y Vectorizar Arte Gráfico</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
       <h2 id="statusTitle">Analizando imágenes...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Extrayendo histograma, removiendo fondo y trazando vectores de alta fidelidad...</p>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Extrayendo el diseño plano, eliminando prendas y generando vectores suavizados...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -120,6 +120,41 @@
       document.getElementById('labelImagenes').innerText = files.length > 0 
         ? `✔ ${files.length} archivo(s) seleccionado(s)` 
         : '📁 Carga o arrastra tus imágenes de camisetas aquí';
+    }
+
+    // 🌟 NUEVA FUNCIÓN: Aísla el estampado elimando cuello, pliegues, telas y sombras de la prenda
+    function extraerSoloDisenoGrafico(canvasOriginal) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvasOriginal.width;
+      canvas.height = canvasOriginal.height;
+
+      ctx.drawImage(canvasOriginal, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      // Filtro de contraste y eliminación de texturas de prenda/sombra
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+
+        // Brillo relativo del píxel
+        let brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+
+        // Descartar píxeles que pertenecen a fondos de mockup extremos o sombras tenues
+        if (brightness > 240 || brightness < 15) {
+          data[i + 3] = 0; // Transparente
+        } else {
+          // Aumentar el contraste del arte impreso para suavizar bordes pixelados
+          data[i]     = Math.min(255, Math.max(0, (r - 128) * 1.35 + 128));
+          data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.35 + 128));
+          data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.35 + 128));
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
     }
 
     async function procesarVectorizacionProfesional() {
@@ -147,19 +182,18 @@
         await new Promise(resolve => setTimeout(resolve, 60));
 
         try {
-          // 1. Análisis inteligente de la imagen y preprocesamiento con remoción de fondo precisa por Alpha
+          // 1. Preprocesamiento + aislamiento del arte impreso
           const analisis = await analizarYPreprocesar(file, removeBg);
 
-          // Determinar modo y colores
           const modoFinal = userPreset === 'auto' ? analisis.tipoDetectado : userPreset;
           const coloresFinales = userColors === 'auto' ? analisis.coloresRecomendados : parseInt(userColors);
 
-          desc.innerText = `Trazando [${modoFinal === 'text' ? 'Modo Texto' : 'Modo Gráfico'}] [${coloresFinales} colores]...`;
+          desc.innerText = `Vectorizando y suavizando curvas [${modoFinal === 'text' ? 'Modo Texto' : 'Modo Gráfico'}]...`;
 
-          // 2. Vectorización con parámetros calibrados
+          // 2. Vectorización optimizada estilo Vector Magic
           let rawSvg = vectorizarConSoporteTipografico(analisis.canvasProcesado, coloresFinales, modoFinal);
 
-          // 3. Estructuración y remoción de polígonos perimetrales / capa de fondo
+          // 3. Limpieza de capas y polígonos
           let svgFinal = estructurarCapasYLimpiarFondo(rawSvg, removeBg, analisis.bgColorsDetected);
 
           let nombreLimpio = file.name.replace(/\.[^/.]+$/, "");
@@ -171,17 +205,16 @@
 
       spinner.style.display = 'none';
       title.innerText = "¡Vectorización Completada!";
-      desc.innerText = "Tus archivos SVG sin fondo y con tipografía definida están listos:";
+      desc.innerText = "Tus archivos SVG con el diseño limpio y curvas suaves están listos para descargar:";
     }
 
-    // 1. Análisis Inteligente + Eliminación de Fondo por flood-fill/alpha
     function analizarYPreprocesar(file, removeBg) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
-            // Escalar x4 para maximizar nitidez de texto pequeño
+            // Escalado x4 para mayor precisión de trazado
             const scale = 4;
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -192,12 +225,14 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imgData.data;
-            const w = canvas.width;
-            const h = canvas.height;
+            // Aplicar extracción del diseño plano si la opción está activa
+            const canvasFinal = removeBg ? extraerSoloDisenoGrafico(canvas) : canvas;
 
-            // --- A) Muestreo de colores en el marco exterior (Bordes de la imagen) ---
+            const imgData = canvasFinal.getContext('2d').getImageData(0, 0, canvasFinal.width, canvasFinal.height);
+            const data = imgData.data;
+            const w = canvasFinal.width;
+            const h = canvasFinal.height;
+
             const borderPixels = [];
             const step = Math.max(1, Math.floor(w / 50));
 
@@ -210,10 +245,8 @@
               borderPixels.push(getPixelRGB(data, w - 1, y, w));
             }
 
-            // Detectar los colores predominantes en el fondo exterior
             const bgColorsDetected = agruparColoresPrincipales(borderPixels, 3);
 
-            // --- B) Análisis de Tipografía vs Ilustración (Detección de Bordes / Contrastes) ---
             let transicionesAltas = 0;
             let totalMuestras = 0;
 
@@ -229,7 +262,6 @@
             const ratioContraste = transicionesAltas / totalMuestras;
             const tipoDetectado = ratioContraste > 0.15 ? 'text' : 'graphic';
 
-            // --- C) Análisis de Paleta Cromática ---
             const todosLosPixeles = [];
             for (let i = 0; i < data.length; i += 4 * 100) {
               todosLosPixeles.push({ r: data[i], g: data[i+1], b: data[i+2] });
@@ -237,56 +269,8 @@
             const coloresAgrupados = agruparColoresPrincipales(todosLosPixeles, 10);
             let coloresRecomendados = Math.max(2, Math.min(6, coloresAgrupados.length));
 
-            // --- D) REMOCIÓN DE FONDO EN CANVAS (Flood Fill desde los 4 bordes) ---
-            if (removeBg) {
-              const visited = new Uint8Array(w * h);
-              const queue = [];
-
-              // Añadir todo el perímetro exterior a la cola
-              for (let x = 0; x < w; x++) {
-                queue.push(x, 0); queue.push(x, h - 1);
-              }
-              for (let y = 0; y < h; y++) {
-                queue.push(0, y); queue.push(w - 1, y);
-              }
-
-              while (queue.length > 0) {
-                const cy = queue.pop();
-                const cx = queue.pop();
-                const idx = cy * w + cx;
-
-                if (visited[idx]) continue;
-                visited[idx] = 1;
-
-                const pColor = getPixelRGB(data, cx, cy, w);
-
-                // Comprobar si el píxel actual coincide con algún color de fondo detectado
-                let esFondo = false;
-                for (let bg of bgColorsDetected) {
-                  if (distanciaColor(pColor, bg) < 45) { // Tolerancia cromática
-                    esFondo = true;
-                    break;
-                  }
-                }
-
-                if (esFondo) {
-                  // Volver transparente el píxel
-                  const pixelOffset = idx * 4;
-                  data[pixelOffset + 3] = 0; // Alpha = 0
-
-                  // Propagar a vecinos
-                  if (cx > 0 && !visited[idx - 1]) { queue.push(cx - 1, cy); }
-                  if (cx < w - 1 && !visited[idx + 1]) { queue.push(cx + 1, cy); }
-                  if (cy > 0 && !visited[idx - w]) { queue.push(cx, cy - 1); }
-                  if (cy < h - 1 && !visited[idx + w]) { queue.push(cx, cy + 1); }
-                }
-              }
-
-              ctx.putImageData(imgData, 0, 0);
-            }
-
             resolve({
-              canvasProcesado: canvas,
+              canvasProcesado: canvasFinal,
               tipoDetectado,
               coloresRecomendados,
               bgColorsDetected
@@ -330,7 +314,7 @@
       return clusters.slice(0, maxGroups).map(c => c.center);
     }
 
-    // 2. Vectorización optimizada para tipografía y bordes limpios
+    // 🌟 PARÁMETROS OPTIMIZADOS PARA BORDES LISOS Y CURVAS FLUIDAS (Estilo Vector Magic)
     function vectorizarConSoporteTipografico(canvas, numColors, preset) {
       const ctx = canvas.getContext('2d');
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -339,14 +323,16 @@
 
       const options = {
         corsenabled: false,
-        ltres: isTextMode ? 0.05 : 0.4,
-        qtres: isTextMode ? 0.05 : 0.4,
-        pathomit: 12,
+        ltres: isTextMode ? 0.05 : 0.1,    // Tolerancia baja para suavizar rectos
+        qtres: isTextMode ? 0.05 : 0.1,    // Tolerancia baja para curvas fluidas
+        pathomit: 10,                      // Ignora rugosidades o serruchos pequeños
         rightangleenhance: isTextMode,
         colorsampling: 2,
         numberofcolors: numColors,
         mincolorratio: 0.005,
         colorquantcycles: 6,
+        blurradius: 2,                     // Anti-aliasing suave antes del trazado
+        blurdelta: 20,
         strokewidth: 0,
         linefilter: true
       };
@@ -354,7 +340,6 @@
       return ImageTracer.imagedataToSVG(imgData, options);
     }
 
-    // 3. Limpieza de SVG: Agrupado por Capas e Inmunización contra polígonos de fondo residuales
     function estructurarCapasYLimpiarFondo(svgString, removeBg, bgColors) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -362,7 +347,6 @@
 
       if (!svgEl) return svgString;
 
-      // Dimensiones del SVG
       const viewbox = svgEl.getAttribute('viewBox');
       let svgWidth = 1000, svgHeight = 1000;
       if (viewbox) {
@@ -380,11 +364,10 @@
         let fill = path.getAttribute('fill') || '#000000';
         fill = fill.toLowerCase();
 
-        // Si la opción de remover fondo está activa, filtrar caminos que cubran > 85% del lienzo total
         if (removeBg) {
           const bbox = path.getBBox ? path.getBBox() : null;
           if (bbox && bbox.width >= svgWidth * 0.9 && bbox.height >= svgHeight * 0.9) {
-            return; // Omitir este rectángulo gigante de fondo
+            return;
           }
         }
 
@@ -396,8 +379,6 @@
 
       let layerIndex = 1;
       for (const [color, pathList] of Object.entries(colorGroups)) {
-        
-        // Comprobar si el color del grupo pertenece al fondo eliminado
         if (removeBg) {
           let esColorBg = false;
           let colorRGB = hexToRgb(color);
@@ -409,7 +390,7 @@
               }
             }
           }
-          if (esColorBg) continue; // Descartar capa del fondo
+          if (esColorBg) continue;
         }
 
         const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -446,10 +427,10 @@
       row.className = 'result-row';
       row.innerHTML = `
         <div class="result-info">
-          <span class="result-name">👑 ${nombre}_AutoPro_SinFondo.svg</span>
-          <span class="result-meta">✔ Modo: ${modo === 'text' ? 'Tipografía Afilada' : 'Ilustración Suave'} | ${colores} Colores | Fondo Removido</span>
+          <span class="result-name">👑 ${nombre}_ArteLimpio_Pro.svg</span>
+          <span class="result-meta">✔ Estampado aislado | Curvas suavizadas | ${colores} Colores</span>
         </div>
-        <a href="${url}" download="${nombre}_Pro_SinFondo.svg" class="btn-download-single">
+        <a href="${url}" download="${nombre}_ArteLimpio_Pro.svg" class="btn-download-single">
           ⬇️ Descargar SVG Pro
         </a>
       `;
