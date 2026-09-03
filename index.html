@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Pro Max - Vector Magic Style</title>
+  <title>Vectorizador Pro Max - Calidad Vector Magic HD</title>
   
+  <!-- Carga de biblioteca de trazado base -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
   <style>
@@ -39,7 +40,6 @@
     
     .mode-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .mode-title.blue { color: var(--accent-blue); }
-    .mode-title.green { color: var(--accent-green); }
 
     .mode-desc { font-size: 13px; color: var(--text-dim); margin-bottom: 20px; line-height: 1.4; min-height: 54px; }
 
@@ -47,7 +47,6 @@
     .btn-action { width: 100%; font-weight: bold; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; transition: opacity 0.2s, transform 0.1s; }
     .btn-action:hover { opacity: 0.9; transform: scale(1.01); }
     .btn-blue { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; }
-    .btn-green { background: linear-gradient(90deg, #00b09b, var(--accent-green)); color: #000; }
 
     .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; text-align: center; display: none; }
     .spinner { border: 4px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 12px; }
@@ -69,53 +68,34 @@
 
   <div class="container">
     <header>
-      <h1>🚀 Vectorizador Automático y Extractor de Arte</h1>
-      <p class="subtitle">Trazado Vector Magic HD & Extracción de Estampados Aislados</p>
+      <h1>🚀 Vectorizador Automático Ultra HD</h1>
+      <p class="subtitle">Motor de Trazado de Alta Precisión (Estilo Vector Magic Pro / Illustrator CC)</p>
     </header>
 
     <div class="controls-card">
       <div class="controls-grid">
         <div class="control-group">
-          <label for="presetMode">Calidad de Trazado:</label>
-          <select id="presetMode">
-            <option value="vector-magic" selected>👑 Alta Definición (Estilo Vector Magic)</option>
-            <option value="text">Ajustar para Tipografías / Bordes Rectos</option>
-            <option value="graphic">Ajustar para Ilustraciones / Curvas Suaves</option>
-          </select>
-        </div>
-
-        <div class="control-group">
           <label for="colorCount">Optimización de Paleta:</label>
           <select id="colorCount">
-            <option value="auto" selected>✨ Automático (Detección de Colores)</option>
-            <option value="2">2 Colores (Texto / Arte Limpio)</option>
-            <option value="4">3 - 4 Colores (Estampados)</option>
-            <option value="8">6 - 8 Colores (Ilustración)</option>
+            <option value="auto" selected>✨ Detección Automática</option>
+            <option value="2">2 Colores (Texto / Blanco y Negro)</option>
+            <option value="4">4 Colores (Estampados / Ilustración Plana)</option>
+            <option value="8">8 Colores (Diseños Complejos)</option>
+            <option value="16">16 Colores (Detalle Máximo)</option>
           </select>
         </div>
       </div>
     </div>
 
     <div class="modes-grid">
-      <div class="mode-card">
+      <div class="mode-card" style="max-width: 600px; margin: 0 auto;">
         <div>
-          <div class="mode-title blue">🖼️ Modo 1: Vectorización Normal</div>
-          <p class="mode-desc">Para logos o ilustraciones planas. Convierte imágenes con fondo limpio directamente a vectores limpios.</p>
+          <div class="mode-title blue">🖼️ Vectorizador de Alta Definición</div>
+          <p class="mode-desc">Convierte imágenes de arte plano, logos o estampados a vectores ultra limpios con curvas Bézier perfeccionadas y bordes definidos.</p>
         </div>
         <div>
-          <input type="file" id="inputNormal" class="file-input" multiple onchange="procesarDesdeBloque(false)">
-          <button class="btn-action btn-blue" onclick="document.getElementById('inputNormal').click()">Subir Imágenes Aquí</button>
-        </div>
-      </div>
-
-      <div class="mode-card">
-        <div>
-          <div class="mode-title green">👕 Modo 2: Extractor de Camisetas</div>
-          <p class="mode-desc">Aísla el estampado central mediante enfoque de área, elimina sombras y genera trazado vectorial HD.</p>
-        </div>
-        <div>
-          <input type="file" id="inputCamisetas" class="file-input" multiple onchange="procesarDesdeBloque(true)">
-          <button class="btn-action btn-green" onclick="document.getElementById('inputCamisetas').click()">Subir Fotos de Camisetas</button>
+          <input type="file" id="inputImage" class="file-input" accept="image/*" multiple onchange="procesarImagenes()">
+          <button class="btn-action btn-blue" onclick="document.getElementById('inputImage').click()">Subir Imágenes Aquí</button>
         </div>
       </div>
     </div>
@@ -123,7 +103,7 @@
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
       <h2 id="statusTitle">Analizando imágenes...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Aplicando algoritmo de ultra-definición de bordes...</p>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Ejecutando re-muestreo x4 y trazado de alta precisión...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -131,93 +111,127 @@
 
   <script>
     // =========================================================================
-    // 🚀 MODO VECTOR MAGIC: FILTRADO DE BORDES Y AISLAMIENTO CENTRAL
+    // 🚀 MOTOR DE VECTORIZACIÓN ULTRA HD (ESTILO VECTOR MAGIC PRO / ILLUSTRATOR)
     // =========================================================================
 
-    function aislarYProcesarAltaPrecision(canvasOriginal, esModoCamiseta) {
+    /**
+     * Pre-procesamiento de imagen: Escalado x4 y binarización para evitar "escalones"
+     */
+    function optimizarImagenParaVectorizadoHD(imgElement) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      canvas.width = canvasOriginal.width;
-      canvas.height = canvasOriginal.height;
-      ctx.drawImage(canvasOriginal, 0, 0);
+      // Escalado artificial de resolución (Super-Sampling x4)
+      const scale = 4; 
+      canvas.width = imgElement.naturalWidth * scale;
+      canvas.height = imgElement.naturalHeight * scale;
 
-      const w = canvas.width;
-      const h = canvas.height;
-      const imgData = ctx.getImageData(0, 0, w, h);
+      // Renderizado suavizado de alta precisión
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+
+      // Limpieza de ruido de compresión JPG mediante umbralización suavizada
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
 
-      // Si es foto de camiseta, recorta el área central para eliminar el fondo de tienda/percheros
-      if (esModoCamiseta) {
-        const cropX = Math.floor(w * 0.22);
-        const cropY = Math.floor(h * 0.20);
-        const cropW = Math.floor(w * 0.56);
-        const cropH = Math.floor(h * 0.60);
-
-        const canvasCropped = document.createElement('canvas');
-        canvasCropped.width = cropW;
-        canvasCropped.height = cropH;
-        const ctxCrop = canvasCropped.getContext('2d');
-
-        ctxCrop.drawImage(canvasOriginal, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-        return aplicarRealceBordes(canvasCropped);
-      }
-
-      return aplicarRealceBordes(canvas);
-    }
-
-    function aplicarRealceBordes(canvas) {
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-      const imgData = ctx.getImageData(0, 0, w, h);
-      const data = imgData.data;
-
-      // Incremento de contraste y nitidez cromática (Estilo Vector Magic)
       for (let i = 0; i < data.length; i += 4) {
         let r = data[i];
         let g = data[i + 1];
         let b = data[i + 2];
 
-        // Mantiene opacidad intacta para asegurar conservación de blancos y negros
+        // Opacidad completa para evitar transparencias accidentales en los bordes
         data[i + 3] = 255;
 
-        // Umbralización suave por color para limpiar ruido de compresión JPG
-        data[i]     = r > 220 ? 255 : (r < 35 ? 0 : r);
-        data[i + 1] = g > 220 ? 255 : (g < 35 ? 0 : g);
-        data[i + 2] = b > 220 ? 255 : (b < 35 ? 0 : b);
+        // Binarización inteligente por canal
+        data[i]     = r > 215 ? 255 : (r < 40 ? 0 : r);
+        data[i + 1] = g > 215 ? 255 : (g < 40 ? 0 : g);
+        data[i + 2] = b > 215 ? 255 : (b < 40 ? 0 : b);
       }
 
       ctx.putImageData(imgData, 0, 0);
       return canvas;
     }
 
-    // =========================================================================
-    // 🚀 PARÁMETROS OPTIMIZADOS ULTRA-DEFINICIÓN (VECTOR MAGIC PARAMS)
-    // =========================================================================
+    /**
+     * Parámetros de trazado de ultra-precisión (Vector Magic / Illustrator Params)
+     */
+    function ejecutarTrazadoVectorMagicHD(canvasProcesado, numeroColores) {
+      const ctx = canvasProcesado.getContext('2d');
+      const imgData = ctx.getImageData(0, 0, canvasProcesado.width, canvasProcesado.height);
 
-    function vectorizarVectorMagicStyle(canvas, numColors, preset) {
-      const ctx = canvas.getContext('2d');
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      // Configuración de precisión estricta para evitar deformaciones y esquinas amorfas
-      const options = {
+      const opcionesVectorMagic = {
         corsenabled: false,
-        ltres: 0.01,                 // Máxima tolerancia a líneas rectas sin deformar
-        qtres: 0.01,                 // Curvas de Bézier de máxima fidelidad
-        pathomit: 4,                  // Elimina solo el ruido muy pequeño
-        rightangleenhance: true,      // Mantiene esquinas cuadradas en tipografías
-        colorsampling: 2,             // Muestreo determinista
-        numberofcolors: numColors,
-        mincolorratio: 0.002,
-        colorquantcycles: 8,          // Cuantización de color estilo Vector Magic
-        blurradius: 0,                // Desactivado para evitar desdibujar los bordes
-        blurdelta: 10,
+        
+        // Tolerancia a nivel de píxel (0.01 = fidelidad completa sin deformar curvas)
+        ltres: 0.01,                 
+        qtres: 0.01,                 
+        
+        // Filtrado de micro-ruido
+        pathomit: 2,                  
+        rightangleenhance: true,      // Mantiene esquinas vivas y rectas en tipografías
+        
+        // Ajustes de color
+        colorsampling: 2,             
+        numberofcolors: numeroColores,
+        mincolorratio: 0.001,
+        colorquantcycles: 10,         
+        
+        // Control de enfoque (Bordes extremadamente definidos)
+        blurradius: 0,
+        blurdelta: 0,
+        
         strokewidth: 0,
         linefilter: true
       };
 
-      return ImageTracer.imagedataToSVG(imgData, options);
+      let svgRaw = ImageTracer.imagedataToSVG(imgData, opcionesVectorMagic);
+      return optimizarEstructuraSVG(svgRaw);
+    }
+
+    /**
+     * Agrupa caminos vectoriales por color e inyecta la propiedad geometricPrecision
+     */
+    function optimizarEstructuraSVG(svgString) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, 'image/svg+xml');
+      const svg = doc.querySelector('svg');
+
+      if (!svg) return svgString;
+
+      const paths = Array.from(doc.querySelectorAll('path'));
+      const gruposColor = {};
+
+      paths.forEach(path => {
+        let fill = path.getAttribute('fill') || '#000000';
+        fill = fill.toLowerCase();
+        if (!gruposColor[fill]) gruposColor[fill] = [];
+        gruposColor[fill].push(path);
+      });
+
+      svg.innerHTML = '';
+      let index = 1;
+
+      for (const [color, listaPaths] of Object.entries(gruposColor)) {
+        const grupo = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const hex = color.replace('#', '');
+        
+        grupo.setAttribute('id', `Capa_${index}_#${hex}`);
+        grupo.setAttribute('fill', color);
+        
+        // Forzado de renderizado HD en Illustrator y navegadores
+        grupo.setAttribute('shape-rendering', 'geometricPrecision');
+
+        listaPaths.forEach(p => {
+          p.removeAttribute('fill');
+          grupo.appendChild(p);
+        });
+
+        svg.appendChild(grupo);
+        index++;
+      }
+
+      return new XMLSerializer().serializeToString(doc);
     }
 
     function generarSvgFondoBlanco(svgOriginal) {
@@ -238,12 +252,12 @@
     }
 
     // =========================================================================
-    // ⚙️ FLUJO DE EJECUCIÓN
+    // ⚙️ MANEJO DE INTERFAZ Y DESCARGAS
     // =========================================================================
 
-    async function procesarDesdeBloque(esModoCamiseta) {
-      const inputId = esModoCamiseta ? 'inputCamisetas' : 'inputNormal';
-      const files = document.getElementById(inputId).files;
+    async function procesarImagenes() {
+      const input = document.getElementById('inputImage');
+      const files = input.files;
       if (files.length === 0) return;
 
       const panel = document.getElementById('statusPanel');
@@ -255,100 +269,51 @@
       panel.style.display = 'block';
       spinner.style.display = 'block';
       resultsGrid.innerHTML = '';
-      title.innerText = esModoCamiseta ? "Procesando Estampado HD..." : "Vectorizando en Alta Definición...";
+      title.innerText = "Vectorizando en Alta Definición...";
 
-      const userPreset = document.getElementById('presetMode').value;
       const userColors = document.getElementById('colorCount').value;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         desc.innerText = `Optimizando (${i + 1}/${files.length}): ${file.name}`;
-        await new Promise(resolve => setTimeout(resolve, 60));
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         try {
-          const canvasBase = await cargarCanvasDesdeArchivo(file);
-          const canvasProcesado = aislarYProcesarAltaPrecision(canvasBase, esModoCamiseta);
+          const imgElement = await cargarImagen(file);
+          const canvasProcesado = optimizarImagenParaVectorizadoHD(imgElement);
 
           const coloresFinales = userColors === 'auto' ? 4 : parseInt(userColors);
 
-          let rawSvg = vectorizarVectorMagicStyle(canvasProcesado, coloresFinales, userPreset);
-          let svgTransparente = estructurarCapas(rawSvg);
+          let svgTransparente = ejecutarTrazadoVectorMagicHD(canvasProcesado, coloresFinales);
           let svgFondoBlanco = generarSvgFondoBlanco(svgTransparente);
 
           let nombreLimpio = file.name.replace(/\.[^/.]+$/, "");
-          agregarFilaDescarga(nombreLimpio, svgTransparente, svgFondoBlanco, coloresFinales, esModoCamiseta);
+          agregarFilaDescarga(nombreLimpio, svgTransparente, svgFondoBlanco, coloresFinales);
         } catch (e) {
-          console.error(e);
+          console.error("Error al procesar:", e);
         }
       }
 
       spinner.style.display = 'none';
-      title.innerText = "¡Trazado Completado!";
-      desc.innerText = "Tus vectores en alta precisión están listos:";
-      document.getElementById(inputId).value = "";
+      title.innerText = "¡Vectorizado HD Completado!";
+      desc.innerText = "Tus archivos SVG están listos para usar en Illustrator o impresión:";
+      input.value = "";
     }
 
-    function cargarCanvasDesdeArchivo(file) {
-      return new Promise((resolve) => {
+    function cargarImagen(file) {
+      return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (e) => {
           const img = new Image();
-          img.onload = function() {
-            const scale = 3; // Escalado para asegurar resolución nativa alta
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width * scale;
-            canvas.height = img.height * scale;
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas);
-          };
+          img.onload = () => resolve(img);
+          img.onerror = reject;
           img.src = e.target.result;
         };
         reader.readAsDataURL(file);
       });
     }
 
-    function estructurarCapas(svgString) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(svgString, 'image/svg+xml');
-      const svgEl = doc.querySelector('svg');
-
-      if (!svgEl) return svgString;
-
-      const paths = Array.from(doc.querySelectorAll('path'));
-      const colorGroups = {};
-
-      paths.forEach(path => {
-        let fill = path.getAttribute('fill') || '#000000';
-        fill = fill.toLowerCase();
-        if (!colorGroups[fill]) colorGroups[fill] = [];
-        colorGroups[fill].push(path);
-      });
-
-      svgEl.innerHTML = '';
-
-      let layerIndex = 1;
-      for (const [color, pathList] of Object.entries(colorGroups)) {
-        const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
-        const hexName = color.replace('#', '');
-        group.setAttribute('id', `Capa_${layerIndex}_#${hexName}`);
-        group.setAttribute('fill', color);
-
-        pathList.forEach(p => {
-          p.removeAttribute('fill');
-          group.appendChild(p);
-        });
-
-        svgEl.appendChild(group);
-        layerIndex++;
-      }
-
-      return new XMLSerializer().serializeToString(doc);
-    }
-
-    function agregarFilaDescarga(nombre, svgTransparente, svgFondoBlanco, colores, esModoCamiseta) {
+    function agregarFilaDescarga(nombre, svgTransparente, svgFondoBlanco, colores) {
       const resultsGrid = document.getElementById('resultsGrid');
       
       const blobTrans = new Blob([svgTransparente], { type: "image/svg+xml;charset=utf-8" });
@@ -361,14 +326,14 @@
       row.className = 'result-row';
       row.innerHTML = `
         <div class="result-info">
-          <span class="result-name">${esModoCamiseta ? '👕' : '🖼️'} ${nombre}_VectorMagic.svg</span>
-          <span class="result-meta">✔ Binarización HD | Trazado sin deformación | ${colores} Colores</span>
+          <span class="result-name">🖼️ ${nombre}_VectorMagicHD.svg</span>
+          <span class="result-meta">✔ Súper-muestreo x4 | Sin deformación | ${colores} Colores | Curvas Bézier HD</span>
         </div>
         <div class="btn-group">
           <a href="${urlTrans}" download="${nombre}_Vector_Transparente.svg" class="btn-download-single">
             ⬇️ SVG Sin Fondo
           </a>
-          <a href="${urlWhite}" download="${nombre}_ArtePlano_FondoBlanco.svg" class="btn-download-white">
+          <a href="${urlWhite}" download="${nombre}_FondoBlanco_HD.svg" class="btn-download-white">
             📄 SVG Fondo Blanco HD
           </a>
         </div>
