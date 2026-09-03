@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Pro - Nivel Vector Magic con Remoción de Fondo</title>
+  <title>Vectorizador Pro Max - AutoDetect & Anti-Fondo</title>
   
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
@@ -23,40 +23,40 @@
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 30px 15px; }
 
     .container { max-width: 900px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 30px; }
-    h1 { font-size: 30px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-    p.subtitle { color: var(--text-dim); font-size: 15px; }
+    header { text-align: center; margin-bottom: 25px; }
+    h1 { font-size: 28px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+    p.subtitle { color: var(--text-dim); font-size: 14px; }
 
-    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; margin-bottom: 30px; text-align: center; }
+    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center; }
 
-    .auto-badge { display: inline-block; background: rgba(0,242,254,0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+    .auto-badge { display: inline-block; background: rgba(0,242,254,0.12); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 15px; }
 
-    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; text-align: left; }
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; text-align: left; }
     .control-group { display: flex; flex-direction: column; gap: 6px; }
-    .control-group label { font-size: 13px; color: var(--text-dim); font-weight: 600; }
-    .control-group select, .control-group input { background: #0d1117; color: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; outline: none; }
+    .control-group label { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+    .control-group select, .control-group input { background: #0d1117; color: #fff; border: 1px solid var(--border-color); padding: 9px; border-radius: 8px; outline: none; font-size: 13px; }
 
-    .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px; }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 10px 0; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
     .checkbox-group input { width: 18px; height: 18px; accent-color: var(--accent-cyan); }
 
-    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px 20px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 20px; transition: 0.2s; }
+    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 25px 15px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 15px; transition: 0.2s; }
     .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
 
     .file-input { display: none; }
-    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 16px 32px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; transition: opacity 0.2s; }
+    .btn-select { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); color: #000; font-weight: bold; padding: 14px 28px; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; width: 100%; transition: opacity 0.2s; }
     .btn-select:hover { opacity: 0.9; }
 
-    .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; text-align: center; display: none; }
-    .spinner { border: 4px solid rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 15px; }
+    .status-panel { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; text-align: center; display: none; }
+    .spinner { border: 4px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    .results-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; }
-    .result-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 14px 20px; border-radius: 10px; border: 1px solid var(--border-color); }
+    .results-grid { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; text-align: left; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 12px 18px; border-radius: 10px; border: 1px solid var(--border-color); }
     .result-info { display: flex; flex-direction: column; gap: 4px; }
-    .result-name { font-weight: 600; color: #fff; word-break: break-all; }
-    .result-meta { font-size: 12px; color: var(--accent-green); }
+    .result-name { font-weight: 600; color: #fff; word-break: break-all; font-size: 14px; }
+    .result-meta { font-size: 11px; color: var(--accent-green); }
 
-    .btn-download-single { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; transition: transform 0.2s; display: inline-block; white-space: nowrap; }
+    .btn-download-single { background: var(--accent-green); color: #000; font-weight: bold; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; transition: transform 0.2s; display: inline-block; white-space: nowrap; }
     .btn-download-single:hover { transform: scale(1.03); }
   </style>
 </head>
@@ -64,27 +64,29 @@
 
   <div class="container">
     <header>
-      <h1>Vectorizador Pro (Ultra Definición & Sin Fondo)</h1>
-      <p class="subtitle">Modo Tipografía/Geometría limpia con separación de capas cromáticas</p>
+      <h1>Vectorizador Pro (IA Auto-Análisis & Sin Fondo)</h1>
+      <p class="subtitle">Análisis inteligente de imagen + Remoción automática de fondo + Preservación de tipografías</p>
     </header>
 
     <div class="card">
-      <div class="auto-badge">🚀 Algoritmo de Preservación Tipográfica Activado</div>
+      <div class="auto-badge">🧠 Detección Automática de Parámetros Activada</div>
 
       <div class="controls-grid">
         <div class="control-group">
-          <label for="presetMode">Tipo de Diseño:</label>
+          <label for="presetMode">Modo de Trazado:</label>
           <select id="presetMode">
-            <option value="text" selected>Textos y Logotipos (Bordes Afilados)</option>
-            <option value="graphic">Ilustraciones y Formas Suaves</option>
+            <option value="auto" selected>✨ Automático (Detectar por Imagen)</option>
+            <option value="text">Ajustar para Tipografías / Vectores Rectos</option>
+            <option value="graphic">Ajustar para Ilustraciones / Curvas</option>
           </select>
         </div>
 
         <div class="control-group">
-          <label for="colorCount">Cantidad de Colores:</label>
+          <label for="colorCount">Paleta Cromática:</label>
           <select id="colorCount">
-            <option value="2">2 Colores (Texto / Silueta)</option>
-            <option value="4" selected>3 - 4 Colores (Diseño Estándar)</option>
+            <option value="auto" selected>✨ Automático (Análisis Cromático)</option>
+            <option value="2">2 Colores (Silueta / Texto puro)</option>
+            <option value="4">3 - 4 Colores (Especial Camisetas)</option>
             <option value="8">6 - 8 Colores (Complejo)</option>
           </select>
         </div>
@@ -92,23 +94,21 @@
 
       <label class="checkbox-group">
         <input type="checkbox" id="removeBgCheck" checked>
-        <span><strong>Eliminar Fondo Automáticamente</strong> (Remueve el color dominante del lienzo)</span>
+        <span><strong>Eliminar Fondo Automáticamente</strong> (Muestrea bordes + máscara de inundación para eliminar el fondo real sin borrar zonas blancas internas)</span>
       </label>
 
-      <br>
-
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
-        <span id="labelImagenes">📁 Carga o arrastra tus imágenes aquí</span>
+        <span id="labelImagenes">📁 Carga o arrastra tus imágenes de camisetas aquí</span>
         <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
-      <button class="btn-select" onclick="procesarVectorizacionProfesional()">⚡ Vectorizar en Calidad Profesional</button>
+      <button class="btn-select" onclick="procesarVectorizacionProfesional()">⚡ Vectorizar de Forma Automática</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Vectorizando...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Analizando tipografía, aislando fondo y organizando capas...</p>
+      <h2 id="statusTitle">Analizando imágenes...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Extrayendo histograma, removiendo fondo y trazando vectores de alta fidelidad...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -118,8 +118,8 @@
     function actualizarEtiqueta() {
       const files = document.getElementById('inputImagenes').files;
       document.getElementById('labelImagenes').innerText = files.length > 0 
-        ? `✔ ${files.length} archivo(s) listo(s)` 
-        : '📁 Carga o arrastra tus imágenes aquí';
+        ? `✔ ${files.length} archivo(s) seleccionado(s)` 
+        : '📁 Carga o arrastra tus imágenes de camisetas aquí';
     }
 
     async function procesarVectorizacionProfesional() {
@@ -135,51 +135,56 @@
       panel.style.display = 'block';
       spinner.style.display = 'block';
       resultsGrid.innerHTML = '';
-      title.innerText = "Optimizando Geometría Vectorial...";
+      title.innerText = "Procesando en Alta Definición...";
 
-      const preset = document.getElementById('presetMode').value;
-      const numColors = parseInt(document.getElementById('colorCount').value);
+      const userPreset = document.getElementById('presetMode').value;
+      const userColors = document.getElementById('colorCount').value;
       const removeBg = document.getElementById('removeBgCheck').checked;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
-        await new Promise(resolve => setTimeout(resolve, 80));
+        desc.innerText = `Analizando (${i + 1}/${files.length}): ${file.name}`;
+        await new Promise(resolve => setTimeout(resolve, 60));
 
         try {
-          // Paso 1: Pre-procesamiento de nitidez en Canvas
-          const { canvas, bgColorHex } = await optimizarMapaDeBits(file);
+          // 1. Análisis inteligente de la imagen y preprocesamiento con remoción de fondo precisa por Alpha
+          const analisis = await analizarYPreprocesar(file, removeBg);
 
-          // Paso 2: Trazado inteligente enfocado en preservar esquinas en tipografía
-          let rawSvg = vectorizarConSoporteTipografico(canvas, numColors, preset);
+          // Determinar modo y colores
+          const modoFinal = userPreset === 'auto' ? analisis.tipoDetectado : userPreset;
+          const coloresFinales = userColors === 'auto' ? analisis.coloresRecomendados : parseInt(userColors);
 
-          // Paso 3: Estructuración por capas y eliminación estricta de fondo
-          let svgFinal = procesarEstructuraYSinFondo(rawSvg, removeBg, bgColorHex);
+          desc.innerText = `Trazando [${modoFinal === 'text' ? 'Modo Texto' : 'Modo Gráfico'}] [${coloresFinales} colores]...`;
+
+          // 2. Vectorización con parámetros calibrados
+          let rawSvg = vectorizarConSoporteTipografico(analisis.canvasProcesado, coloresFinales, modoFinal);
+
+          // 3. Estructuración y remoción de polígonos perimetrales / capa de fondo
+          let svgFinal = estructurarCapasYLimpiarFondo(rawSvg, removeBg, analisis.bgColorsDetected);
 
           let nombreLimpio = file.name.replace(/\.[^/.]+$/, "");
-          agregarFilaDescarga(nombreLimpio, svgFinal);
+          agregarFilaDescarga(nombreLimpio, svgFinal, modoFinal, coloresFinales);
         } catch (e) {
           console.error(e);
         }
       }
 
       spinner.style.display = 'none';
-      title.innerText = "¡Vectorización de Alto Nivel Lista!";
-      desc.innerText = "Vectores con tipografía clara, capas ordenadas y sin fondo:";
+      title.innerText = "¡Vectorización Completada!";
+      desc.innerText = "Tus archivos SVG sin fondo y con tipografía definida están listos:";
     }
 
-    // 1. Amplifica la resolución x4 y detecta el color de las esquinas (Fondo)
-    function optimizarMapaDeBits(file) {
+    // 1. Análisis Inteligente + Eliminación de Fondo por flood-fill/alpha
+    function analizarYPreprocesar(file, removeBg) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
+            // Escalar x4 para maximizar nitidez de texto pequeño
+            const scale = 4;
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-
-            // Super-Sampling x4 para darle máxima definición a los textos pequeños
-            const scale = 4;
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
 
@@ -187,11 +192,105 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Muestra del color de fondo en la esquina superior izquierda (0,0)
-            const pixel = ctx.getImageData(5, 5, 1, 1).data;
-            const bgColorHex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            const w = canvas.width;
+            const h = canvas.height;
 
-            resolve({ canvas, bgColorHex });
+            // --- A) Muestreo de colores en el marco exterior (Bordes de la imagen) ---
+            const borderPixels = [];
+            const step = Math.max(1, Math.floor(w / 50));
+
+            for (let x = 0; x < w; x += step) {
+              borderPixels.push(getPixelRGB(data, x, 0, w));
+              borderPixels.push(getPixelRGB(data, x, h - 1, w));
+            }
+            for (let y = 0; y < h; y += step) {
+              borderPixels.push(getPixelRGB(data, 0, y, w));
+              borderPixels.push(getPixelRGB(data, w - 1, y, w));
+            }
+
+            // Detectar los colores predominantes en el fondo exterior
+            const bgColorsDetected = agruparColoresPrincipales(borderPixels, 3);
+
+            // --- B) Análisis de Tipografía vs Ilustración (Detección de Bordes / Contrastes) ---
+            let transicionesAltas = 0;
+            let totalMuestras = 0;
+
+            for (let y = 10; y < h - 10; y += 20) {
+              for (let x = 10; x < w - 10; x += 20) {
+                let p1 = getLuminance(getPixelRGB(data, x, y, w));
+                let p2 = getLuminance(getPixelRGB(data, x + 2, y, w));
+                if (Math.abs(p1 - p2) > 40) transicionesAltas++;
+                totalMuestras++;
+              }
+            }
+
+            const ratioContraste = transicionesAltas / totalMuestras;
+            const tipoDetectado = ratioContraste > 0.15 ? 'text' : 'graphic';
+
+            // --- C) Análisis de Paleta Cromática ---
+            const todosLosPixeles = [];
+            for (let i = 0; i < data.length; i += 4 * 100) {
+              todosLosPixeles.push({ r: data[i], g: data[i+1], b: data[i+2] });
+            }
+            const coloresAgrupados = agruparColoresPrincipales(todosLosPixeles, 10);
+            let coloresRecomendados = Math.max(2, Math.min(6, coloresAgrupados.length));
+
+            // --- D) REMOCIÓN DE FONDO EN CANVAS (Flood Fill desde los 4 bordes) ---
+            if (removeBg) {
+              const visited = new Uint8Array(w * h);
+              const queue = [];
+
+              // Añadir todo el perímetro exterior a la cola
+              for (let x = 0; x < w; x++) {
+                queue.push(x, 0); queue.push(x, h - 1);
+              }
+              for (let y = 0; y < h; y++) {
+                queue.push(0, y); queue.push(w - 1, y);
+              }
+
+              while (queue.length > 0) {
+                const cy = queue.pop();
+                const cx = queue.pop();
+                const idx = cy * w + cx;
+
+                if (visited[idx]) continue;
+                visited[idx] = 1;
+
+                const pColor = getPixelRGB(data, cx, cy, w);
+
+                // Comprobar si el píxel actual coincide con algún color de fondo detectado
+                let esFondo = false;
+                for (let bg of bgColorsDetected) {
+                  if (distanciaColor(pColor, bg) < 45) { // Tolerancia cromática
+                    esFondo = true;
+                    break;
+                  }
+                }
+
+                if (esFondo) {
+                  // Volver transparente el píxel
+                  const pixelOffset = idx * 4;
+                  data[pixelOffset + 3] = 0; // Alpha = 0
+
+                  // Propagar a vecinos
+                  if (cx > 0 && !visited[idx - 1]) { queue.push(cx - 1, cy); }
+                  if (cx < w - 1 && !visited[idx + 1]) { queue.push(cx + 1, cy); }
+                  if (cy > 0 && !visited[idx - w]) { queue.push(cx, cy - 1); }
+                  if (cy < h - 1 && !visited[idx + w]) { queue.push(cx, cy + 1); }
+                }
+              }
+
+              ctx.putImageData(imgData, 0, 0);
+            }
+
+            resolve({
+              canvasProcesado: canvas,
+              tipoDetectado,
+              coloresRecomendados,
+              bgColorsDetected
+            });
           };
           img.src = e.target.result;
         };
@@ -199,11 +298,39 @@
       });
     }
 
-    function rgbToHex(r, g, b) {
-      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    function getPixelRGB(data, x, y, w) {
+      const idx = (y * w + x) * 4;
+      return { r: data[idx], g: data[idx + 1], b: data[idx + 2] };
     }
 
-    // 2. Trazado con tolerancia de esquinas
+    function getLuminance(rgb) {
+      return 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+    }
+
+    function distanciaColor(c1, c2) {
+      return Math.abs(c1.r - c2.r) + Math.abs(c1.g - c2.g) + Math.abs(c1.b - c2.b);
+    }
+
+    function agruparColoresPrincipales(pixelList, maxGroups) {
+      const clusters = [];
+      for (let p of pixelList) {
+        let encontrado = false;
+        for (let c of clusters) {
+          if (distanciaColor(p, c.center) < 35) {
+            c.count++;
+            encontrado = true;
+            break;
+          }
+        }
+        if (!encontrado) {
+          clusters.push({ center: p, count: 1 });
+        }
+      }
+      clusters.sort((a, b) => b.count - a.count);
+      return clusters.slice(0, maxGroups).map(c => c.center);
+    }
+
+    // 2. Vectorización optimizada para tipografía y bordes limpios
     function vectorizarConSoporteTipografico(canvas, numColors, preset) {
       const ctx = canvas.getContext('2d');
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -212,15 +339,14 @@
 
       const options = {
         corsenabled: false,
-        // Parámetros críticos para que las letras mantengan esquinas rectificadas
-        ltres: isTextMode ? 0.01 : 0.5,      // Cero deformación en trazos rectos
-        qtres: isTextMode ? 0.01 : 0.5,      // Ajuste Bezier de alta fidelidad
-        pathomit: 8,                         // Omite únicamente pequeños lunares de ruido
-        rightangleenhance: isTextMode,       // RECTIFICA ESQUINAS A 90º (Ideal para tipografías)
+        ltres: isTextMode ? 0.05 : 0.4,
+        qtres: isTextMode ? 0.05 : 0.4,
+        pathomit: 12,
+        rightangleenhance: isTextMode,
         colorsampling: 2,
         numberofcolors: numColors,
         mincolorratio: 0.005,
-        colorquantcycles: 8,
+        colorquantcycles: 6,
         strokewidth: 0,
         linefilter: true
       };
@@ -228,13 +354,24 @@
       return ImageTracer.imagedataToSVG(imgData, options);
     }
 
-    // 3. Organiza en capas <g> y elimina la capa contenedora del fondo
-    function procesarEstructuraYSinFondo(svgString, removeBg, bgColorHex) {
+    // 3. Limpieza de SVG: Agrupado por Capas e Inmunización contra polígonos de fondo residuales
+    function estructurarCapasYLimpiarFondo(svgString, removeBg, bgColors) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
       const svgEl = doc.querySelector('svg');
 
       if (!svgEl) return svgString;
+
+      // Dimensiones del SVG
+      const viewbox = svgEl.getAttribute('viewBox');
+      let svgWidth = 1000, svgHeight = 1000;
+      if (viewbox) {
+        const parts = viewbox.split(' ');
+        if (parts.length === 4) {
+          svgWidth = parseFloat(parts[2]);
+          svgHeight = parseFloat(parts[3]);
+        }
+      }
 
       const paths = Array.from(doc.querySelectorAll('path'));
       const colorGroups = {};
@@ -242,21 +379,37 @@
       paths.forEach(path => {
         let fill = path.getAttribute('fill') || '#000000';
         fill = fill.toLowerCase();
+
+        // Si la opción de remover fondo está activa, filtrar caminos que cubran > 85% del lienzo total
+        if (removeBg) {
+          const bbox = path.getBBox ? path.getBBox() : null;
+          if (bbox && bbox.width >= svgWidth * 0.9 && bbox.height >= svgHeight * 0.9) {
+            return; // Omitir este rectángulo gigante de fondo
+          }
+        }
+
         if (!colorGroups[fill]) colorGroups[fill] = [];
         colorGroups[fill].push(path);
       });
 
       svgEl.innerHTML = '';
 
-      // Identificar y omitir la capa del fondo
-      let targetBg = bgColorHex.toLowerCase();
-
       let layerIndex = 1;
       for (const [color, pathList] of Object.entries(colorGroups)) {
         
-        // Si la opción de eliminar fondo está activa y el color coincide con el fondo detectado, se omite
-        if (removeBg && sonColoresSimilares(color, targetBg)) {
-          continue; 
+        // Comprobar si el color del grupo pertenece al fondo eliminado
+        if (removeBg) {
+          let esColorBg = false;
+          let colorRGB = hexToRgb(color);
+          if (colorRGB) {
+            for (let bg of bgColors) {
+              if (distanciaColor(colorRGB, bg) < 35) {
+                esColorBg = true;
+                break;
+              }
+            }
+          }
+          if (esColorBg) continue; // Descartar capa del fondo
         }
 
         const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -276,20 +429,15 @@
       return new XMLSerializer().serializeToString(doc);
     }
 
-    // Comparador numérico para tolerar ligeras variaciones de color de fondo
-    function sonColoresSimilares(hex1, hex2) {
-      if (hex1 === hex2) return true;
-      let c1 = parseInt(hex1.replace('#',''), 16);
-      let c2 = parseInt(hex2.replace('#',''), 16);
-      
-      let r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
-      let r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
-
-      let diff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
-      return diff < 30; // Margen de tolerancia cromática
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+      if (hex.length !== 6) return null;
+      let num = parseInt(hex, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
     }
 
-    function agregarFilaDescarga(nombre, svgContent) {
+    function agregarFilaDescarga(nombre, svgContent, modo, colores) {
       const resultsGrid = document.getElementById('resultsGrid');
       const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -298,11 +446,11 @@
       row.className = 'result-row';
       row.innerHTML = `
         <div class="result-info">
-          <span class="result-name">👑 ${nombre}_Pro_SinFondo.svg</span>
-          <span class="result-meta">✔ Tipografía Definida + Sin Fondo + Capas Limpias</span>
+          <span class="result-name">👑 ${nombre}_AutoPro_SinFondo.svg</span>
+          <span class="result-meta">✔ Modo: ${modo === 'text' ? 'Tipografía Afilada' : 'Ilustración Suave'} | ${colores} Colores | Fondo Removido</span>
         </div>
         <a href="${url}" download="${nombre}_Pro_SinFondo.svg" class="btn-download-single">
-          ⬇️ Descargar SVG Profesional
+          ⬇️ Descargar SVG Pro
         </a>
       `;
       resultsGrid.appendChild(row);
