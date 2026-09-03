@@ -103,7 +103,7 @@
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
       <h2 id="statusTitle">Analizando imágenes...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Ejecutando re-muestreo x4 y trazado de alta precisión...</p>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Ejecutando re-muestreo y trazado de alta precisión...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -111,42 +111,45 @@
 
   <script>
     // =========================================================================
-    // 🚀 MOTOR DE VECTORIZACIÓN ULTRA HD (ESTILO VECTOR MAGIC PRO / ILLUSTRATOR)
+    // 🚀 MOTOR DE VECTORIZACIÓN ULTRA HD RECALIBRADO
     // =========================================================================
 
     /**
-     * Pre-procesamiento de imagen: Escalado x4 y binarización para evitar "escalones"
+     * 1. LIMPIEZA CROMÁTICA Y POSTERIZADO PURO (ELIMINA EL "SERRUCHO")
+     * Remueve bordes intermedios, anti-aliasing y artefactos JPG convirtiendo
+     * los tonos de transición en colores sólidos limpios antes del trazado.
      */
     function optimizarImagenParaVectorizadoHD(imgElement) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Escalado artificial de resolución (Super-Sampling x4)
-      const scale = 4; 
+      // Escalado x3 para bordes definidos pero manejables
+      const scale = 3; 
       canvas.width = imgElement.naturalWidth * scale;
       canvas.height = imgElement.naturalHeight * scale;
 
-      // Renderizado suavizado de alta precisión
+      // Renderizado con suavizado
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
 
-      // Limpieza de ruido de compresión JPG mediante umbralización suavizada
+      // Extracción y Posterización Inteligente por Píxel
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
 
+      // Umbralización de limpieza para forzar colores sólidos
       for (let i = 0; i < data.length; i += 4) {
         let r = data[i];
         let g = data[i + 1];
         let b = data[i + 2];
 
-        // Opacidad completa para evitar transparencias accidentales en los bordes
+        // Forzar canal Alfa a sólido
         data[i + 3] = 255;
 
-        // Binarización inteligente por canal
-        data[i]     = r > 215 ? 255 : (r < 40 ? 0 : r);
-        data[i + 1] = g > 215 ? 255 : (g < 40 ? 0 : g);
-        data[i + 2] = b > 215 ? 255 : (b < 40 ? 0 : b);
+        // Posterización agresiva de tonos oscuros/claros para eliminar bordes grises/fantasma
+        data[i]     = r > 180 ? 255 : (r < 75 ? 0 : r);
+        data[i + 1] = g > 180 ? 255 : (g < 75 ? 0 : g);
+        data[i + 2] = b > 180 ? 255 : (b < 75 ? 0 : b);
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -154,7 +157,7 @@
     }
 
     /**
-     * Parámetros de trazado de ultra-precisión (Vector Magic / Illustrator Params)
+     * 2. PARÁMETROS DE RE-MUESTREO BÉZIER (CURVAS SUAVES ESTILO VECTOR MAGIC)
      */
     function ejecutarTrazadoVectorMagicHD(canvasProcesado, numeroColores) {
       const ctx = canvasProcesado.getContext('2d');
@@ -163,23 +166,24 @@
       const opcionesVectorMagic = {
         corsenabled: false,
         
-        // Tolerancia a nivel de píxel (0.01 = fidelidad completa sin deformar curvas)
-        ltres: 0.01,                 
-        qtres: 0.01,                 
+        // CONTROL DE ERRORES BÉZIER (Unifica trazados para eliminar escalones)
+        ltres: 1,                    
+        qtres: 1,                    
         
-        // Filtrado de micro-ruido
-        pathomit: 2,                  
-        rightangleenhance: true,      // Mantiene esquinas vivas y rectas en tipografías
+        // DESENFOQUE DE TRAZADO (Elimina capas fantasma alrededor de letras)
+        blurradius: 2,               
+        blurdelta: 20,               
         
-        // Ajustes de color
+        // FILTRADO DE RUIDO Y ESQUINAS
+        pathomit: 8,                 // Ignora manchitas de compresión JPG
+        rightangleenhance: true,     // Mantiene rectos los trazos en tipografías
+        
+        // PALETA Y REDONDEO
         colorsampling: 2,             
         numberofcolors: numeroColores,
-        mincolorratio: 0.001,
-        colorquantcycles: 10,         
-        
-        // Control de enfoque (Bordes extremadamente definidos)
-        blurradius: 0,
-        blurdelta: 0,
+        mincolorratio: 0.005,
+        colorquantcycles: 5,         
+        rounddisplay: 2,             // Redondea coordenadas a 2 decimales para trazos limpios
         
         strokewidth: 0,
         linefilter: true
@@ -327,7 +331,7 @@
       row.innerHTML = `
         <div class="result-info">
           <span class="result-name">🖼️ ${nombre}_VectorMagicHD.svg</span>
-          <span class="result-meta">✔ Súper-muestreo x4 | Sin deformación | ${colores} Colores | Curvas Bézier HD</span>
+          <span class="result-meta">✔ Posterizado Anti-Serrucho | Bordes Bézier Suaves | ${colores} Colores</span>
         </div>
         <div class="btn-group">
           <a href="${urlTrans}" download="${nombre}_Vector_Transparente.svg" class="btn-download-single">
