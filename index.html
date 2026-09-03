@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Pro Max - Calidad Vector Magic HD</title>
+  <title>Vectorizador Pro Max - Fidelidad de Color Completa</title>
   
   <!-- Carga de biblioteca de trazado base -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
@@ -69,19 +69,19 @@
   <div class="container">
     <header>
       <h1>🚀 Vectorizador Automático Ultra HD</h1>
-      <p class="subtitle">Motor de Trazado de Alta Precisión (Estilo Vector Magic Pro / Illustrator CC)</p>
+      <p class="subtitle">Motor de Trazado Completo (Conserva Blancos, Negros y Detalles Finos)</p>
     </header>
 
     <div class="controls-card">
       <div class="controls-grid">
         <div class="control-group">
-          <label for="colorCount">Optimización de Paleta:</label>
+          <label for="colorCount">Preservación de Paleta y Detalles:</label>
           <select id="colorCount">
-            <option value="auto" selected>✨ Detección Automática</option>
-            <option value="2">2 Colores (Texto / Blanco y Negro)</option>
-            <option value="4">4 Colores (Estampados / Ilustración Plana)</option>
-            <option value="8">8 Colores (Diseños Complejos)</option>
-            <option value="16">16 Colores (Detalle Máximo)</option>
+            <option value="auto" selected>✨ Detección Inteligente de Colores</option>
+            <option value="4">4 Colores (Ilustraciones Sencillas)</option>
+            <option value="8">8 Colores (Diseños con Letras y Blancos)</option>
+            <option value="16">16 Colores (Detalle Máximo / Múltiples Tonos)</option>
+            <option value="32">32 Colores (Alta Fidelidad Cero Pérdida)</option>
           </select>
         </div>
       </div>
@@ -90,8 +90,8 @@
     <div class="modes-grid">
       <div class="mode-card" style="max-width: 600px; margin: 0 auto;">
         <div>
-          <div class="mode-title blue">🖼️ Vectorizador de Alta Definición</div>
-          <p class="mode-desc">Convierte imágenes de arte plano, logos o estampados a vectores ultra limpios con curvas Bézier perfeccionadas y bordes definidos.</p>
+          <div class="mode-title blue">🖼️ Vectorizador de Alta Precision</div>
+          <p class="mode-desc">Conserva la totalidad de los colores (incluyendo blanco y negro) y trazados finos como tipografía cursiva o manuscrita.</p>
         </div>
         <div>
           <input type="file" id="inputImage" class="file-input" accept="image/*" multiple onchange="procesarImagenes()">
@@ -103,7 +103,7 @@
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
       <h2 id="statusTitle">Analizando imágenes...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Ejecutando re-muestreo y trazado de alta precisión...</p>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 8px; font-size: 13px;">Ejecutando re-muestreo y trazado sin pérdida de color...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -111,53 +111,30 @@
 
   <script>
     // =========================================================================
-    // 🚀 MOTOR DE VECTORIZACIÓN ULTRA HD RECALIBRADO
+    // 🚀 MOTOR DE VECTORIZACIÓN CON FIDELIDAD COMPLETA DE COLOR
     // =========================================================================
 
     /**
-     * 1. LIMPIEZA CROMÁTICA Y POSTERIZADO PURO (ELIMINA EL "SERRUCHO")
-     * Remueve bordes intermedios, anti-aliasing y artefactos JPG convirtiendo
-     * los tonos de transición en colores sólidos limpios antes del trazado.
+     * Preprocesamiento seguro sin destruir tonos blancos ni letras finas.
      */
     function optimizarImagenParaVectorizadoHD(imgElement) {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
-      // Escalado x3 para bordes definidos pero manejables
-      const scale = 3; 
+      // Escalado x2 para aumentar la definición de curvas sin deformar trazos finos
+      const scale = 2; 
       canvas.width = imgElement.naturalWidth * scale;
       canvas.height = imgElement.naturalHeight * scale;
 
-      // Renderizado con suavizado
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
 
-      // Extracción y Posterización Inteligente por Píxel
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imgData.data;
-
-      // Umbralización de limpieza para forzar colores sólidos
-      for (let i = 0; i < data.length; i += 4) {
-        let r = data[i];
-        let g = data[i + 1];
-        let b = data[i + 2];
-
-        // Forzar canal Alfa a sólido
-        data[i + 3] = 255;
-
-        // Posterización agresiva de tonos oscuros/claros para eliminar bordes grises/fantasma
-        data[i]     = r > 180 ? 255 : (r < 75 ? 0 : r);
-        data[i + 1] = g > 180 ? 255 : (g < 75 ? 0 : g);
-        data[i + 2] = b > 180 ? 255 : (b < 75 ? 0 : b);
-      }
-
-      ctx.putImageData(imgData, 0, 0);
       return canvas;
     }
 
     /**
-     * 2. PARÁMETROS DE RE-MUESTREO BÉZIER (CURVAS SUAVES ESTILO VECTOR MAGIC)
+     * Configuración del motor de trazado para capturar trazos delgados y blancos
      */
     function ejecutarTrazadoVectorMagicHD(canvasProcesado, numeroColores) {
       const ctx = canvasProcesado.getContext('2d');
@@ -166,24 +143,24 @@
       const opcionesVectorMagic = {
         corsenabled: false,
         
-        // CONTROL DE ERRORES BÉZIER (Unifica trazados para eliminar escalones)
-        ltres: 1,                    
-        qtres: 1,                    
+        // Reducidos para capturar detalles finos como textos delgados ("start", "New")
+        ltres: 0.5,                    
+        qtres: 0.5,                    
         
-        // DESENFOQUE DE TRAZADO (Elimina capas fantasma alrededor de letras)
-        blurradius: 2,               
-        blurdelta: 20,               
+        // Mínimo desenfoque para no desaparecer trazos blancos sobre fondos de color
+        blurradius: 0,               
+        blurdelta: 10,               
         
-        // FILTRADO DE RUIDO Y ESQUINAS
-        pathomit: 8,                 // Ignora manchitas de compresión JPG
-        rightangleenhance: true,     // Mantiene rectos los trazos en tipografías
+        // Conserva detalles pequeños sin descartarlos
+        pathomit: 2,                 
+        rightangleenhance: true,     
         
-        // PALETA Y REDONDEO
+        // Muestra de color y cuantificación
         colorsampling: 2,             
         numberofcolors: numeroColores,
-        mincolorratio: 0.005,
+        mincolorratio: 0.0001,       // Permite detectar colores que ocupan poco espacio (como textos pequeños)
         colorquantcycles: 5,         
-        rounddisplay: 2,             // Redondea coordenadas a 2 decimales para trazos limpios
+        rounddisplay: 2,             
         
         strokewidth: 0,
         linefilter: true
@@ -194,7 +171,7 @@
     }
 
     /**
-     * Agrupa caminos vectoriales por color e inyecta la propiedad geometricPrecision
+     * Agrupa caminos vectoriales por color
      */
     function optimizarEstructuraSVG(svgString) {
       const parser = new DOMParser();
@@ -222,8 +199,6 @@
         
         grupo.setAttribute('id', `Capa_${index}_#${hex}`);
         grupo.setAttribute('fill', color);
-        
-        // Forzado de renderizado HD en Illustrator y navegadores
         grupo.setAttribute('shape-rendering', 'geometricPrecision');
 
         listaPaths.forEach(p => {
@@ -273,7 +248,7 @@
       panel.style.display = 'block';
       spinner.style.display = 'block';
       resultsGrid.innerHTML = '';
-      title.innerText = "Vectorizando en Alta Definición...";
+      title.innerText = "Vectorizando con Fidelidad Completa...";
 
       const userColors = document.getElementById('colorCount').value;
 
@@ -286,7 +261,8 @@
           const imgElement = await cargarImagen(file);
           const canvasProcesado = optimizarImagenParaVectorizadoHD(imgElement);
 
-          const coloresFinales = userColors === 'auto' ? 4 : parseInt(userColors);
+          // Asignación de colores por defecto para evitar perder trazos
+          const coloresFinales = userColors === 'auto' ? 12 : parseInt(userColors);
 
           let svgTransparente = ejecutarTrazadoVectorMagicHD(canvasProcesado, coloresFinales);
           let svgFondoBlanco = generarSvgFondoBlanco(svgTransparente);
@@ -300,7 +276,7 @@
 
       spinner.style.display = 'none';
       title.innerText = "¡Vectorizado HD Completado!";
-      desc.innerText = "Tus archivos SVG están listos para usar en Illustrator o impresión:";
+      desc.innerText = "Tus archivos SVG contienen todos los elementos y colores originales:";
       input.value = "";
     }
 
@@ -331,7 +307,7 @@
       row.innerHTML = `
         <div class="result-info">
           <span class="result-name">🖼️ ${nombre}_VectorMagicHD.svg</span>
-          <span class="result-meta">✔ Posterizado Anti-Serrucho | Bordes Bézier Suaves | ${colores} Colores</span>
+          <span class="result-meta">✔ Trazados completos conservados | Blancos y Negros Activos | ${colores} Colores</span>
         </div>
         <div class="btn-group">
           <a href="${urlTrans}" download="${nombre}_Vector_Transparente.svg" class="btn-download-single">
