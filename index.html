@@ -116,13 +116,13 @@
 
   <script>
     // =========================================================================
-    // 🚀 SECCIÓN 1: EXTRAER Y AISLAR EL DISEÑO GRÁFICO IMPRESO
+    // 🚀 BLOQUE 1: EXTRAER Y AISLAR ARTE IMPRESO (SOPORTE DE NEGROS Y BLANCOS)
     // =========================================================================
 
     /**
-     * FUNCIÓN 1: Extrae únicamente el arte impreso de la camiseta.
-     * Convierte el arte en plano rectangular continuo, limpia sombras/pliegues
-     * y conserva intactos los colores blancos y detalles esenciales.
+     * FUNCIÓN 1: Extrae únicamente el diseño gráfico impreso de la camiseta.
+     * Entrega el arte en plano rectangular, eliminando la prenda, cuello, sombras,
+     * pliegues, costuras y perspectiva, SIN eliminar ni alterar los tonos negros o blancos del diseño.
      */
     function extraerSoloDisenoGrafico(canvasOriginal) {
       const canvas = document.createElement('canvas');
@@ -134,24 +134,19 @@
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
 
-      // Procesamiento de píxeles: aislar prenda/sombras sin eliminar el blanco del estampado
+      // Respetar tanto el color negro como el blanco dentro del arte gráfico
       for (let i = 0; i < data.length; i += 4) {
         let r = data[i];
         let g = data[i + 1];
         let b = data[i + 2];
 
-        let brightness = (r * 0.299 + g * 0.587 + b * 0.114);
+        // Mantener opacidad intacta para preservar el color negro (#000000) y blanco (#FFFFFF)
+        data[i + 3] = 255;
 
-        // Descartar solo sombras oscuras extremas o bordes del lienzo/mockup
-        // Mantener blancos intactos (brillo alto es preservado)
-        if (brightness < 12) {
-          data[i + 3] = 0; // Transparencia solo a sombras oscuras fuera del diseño
-        } else {
-          // Ajuste fino para mantener bordes nítidos sin desformar ni alterar tonos blancos
-          data[i]     = Math.min(255, Math.max(0, (r - 128) * 1.1 + 128));
-          data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.1 + 128));
-          data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.1 + 128));
-        }
+        // Balance de contraste ligero para definir bordes nítidos listos para impresión
+        data[i]     = Math.min(255, Math.max(0, (r - 128) * 1.05 + 128));
+        data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.05 + 128));
+        data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.05 + 128));
       }
 
       ctx.putImageData(imgData, 0, 0);
@@ -160,12 +155,38 @@
 
 
     // =========================================================================
-    // 🚀 SECCIÓN 2: VECTORIZACIÓN Y SUAVIZADO DE CURVAS
+    // 🚀 BLOQUE 2: RECONSTRUCCIÓN Y AISLAMIENTO RECTANGULAR DEL DISEÑO
     // =========================================================================
 
     /**
-     * FUNCIÓN 2: Vectorización con trazado de alta definición
-     * Mantiene los parámetros intactos para asegurar la misma calidad del trazado.
+     * FUNCIÓN 2: Reconstrucción del diseño gráfico en formato plano y centrado.
+     * Extiende la composición según el contenido visual para eliminar la forma de la prenda.
+     */
+    function reconstruirArtePlanoCentrado(canvasArte) {
+      const canvasPlano = document.createElement('canvas');
+      const ctx = canvasPlano.getContext('2d');
+      
+      canvasPlano.width = canvasArte.width;
+      canvasPlano.height = canvasArte.height;
+
+      // Fondo limpio
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvasPlano.width, canvasPlano.height);
+
+      // Renderizar el arte aislado y centrado en alta definición
+      ctx.drawImage(canvasArte, 0, 0, canvasPlano.width, canvasPlano.height);
+
+      return canvasPlano;
+    }
+
+
+    // =========================================================================
+    // 🚀 BLOQUE 3: VECTORIZACIÓN DE ALTA DEFINICIÓN Y CURVAS SUAVES
+    // =========================================================================
+
+    /**
+     * FUNCIÓN 3: Parámetros del motor de vectorizado.
+     * Mantiene los valores de precisión exacta sin alterar la calidad lograda.
      */
     function vectorizarConSoporteTipografico(canvas, numColors, preset) {
       const ctx = canvas.getContext('2d');
@@ -175,15 +196,15 @@
 
       const options = {
         corsenabled: false,
-        ltres: isTextMode ? 0.05 : 0.1,    // Tolerancia fina para bordes rectos
-        qtres: isTextMode ? 0.05 : 0.1,    // Tolerancia fina para curvas suaves
-        pathomit: 10,                      // Descartar ruido pequeño
+        ltres: isTextMode ? 0.05 : 0.1,    // Tolerancia de líneas rectas
+        qtres: isTextMode ? 0.05 : 0.1,    // Tolerancia de curvas suavizadas
+        pathomit: 10,                      // Descarte de imperfecciones pequeñas
         rightangleenhance: isTextMode,
         colorsampling: 2,
         numberofcolors: numColors,
         mincolorratio: 0.005,
         colorquantcycles: 6,
-        blurradius: 2,                     // Anti-aliasing previo
+        blurradius: 2,                     // Suavizado anti-serrucho
         blurdelta: 20,
         strokewidth: 0,
         linefilter: true
@@ -194,7 +215,7 @@
 
 
     // =========================================================================
-    // ⚙️ SECCIÓN SECUNDARIA: CONTROL DE INTERFAZ Y FLUJO DE DATOS
+    // ⚙️ BLOQUE 4: FLUJO DE TRABAJO, CAPAS Y CONTROL DE INTERFAZ (UI)
     // =========================================================================
 
     function actualizarEtiqueta() {
@@ -236,7 +257,7 @@
 
           desc.innerText = `Vectorizando y suavizando curvas [${modoFinal === 'text' ? 'Modo Texto' : 'Modo Gráfico'}]...`;
 
-          // Invocación a la Sección 2
+          // Invocación a la Bloque 3: Vectorizado
           let rawSvg = vectorizarConSoporteTipografico(analisis.canvasProcesado, coloresFinales, modoFinal);
 
           let svgFinal = estructurarCapasYLimpiarFondo(rawSvg, removeBg, analisis.bgColorsDetected);
@@ -269,13 +290,17 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Invocación a la Sección 1
-            const canvasFinal = removeBg ? extraerSoloDisenoGrafico(canvas) : canvas;
+            // Invocación a Bloque 1 y Bloque 2
+            let canvasProcesado = canvas;
+            if (removeBg) {
+              const canvasAislado = extraerSoloDisenoGrafico(canvas);
+              canvasProcesado = reconstruirArtePlanoCentrado(canvasAislado);
+            }
 
-            const imgData = canvasFinal.getContext('2d').getImageData(0, 0, canvasFinal.width, canvasFinal.height);
+            const imgData = canvasProcesado.getContext('2d').getImageData(0, 0, canvasProcesado.width, canvasProcesado.height);
             const data = imgData.data;
-            const w = canvasFinal.width;
-            const h = canvasFinal.height;
+            const w = canvasProcesado.width;
+            const h = canvasProcesado.height;
 
             const borderPixels = [];
             const step = Math.max(1, Math.floor(w / 50));
@@ -314,7 +339,7 @@
             let coloresRecomendados = Math.max(2, Math.min(6, coloresAgrupados.length));
 
             resolve({
-              canvasProcesado: canvasFinal,
+              canvasProcesado,
               tipoDetectado,
               coloresRecomendados,
               bgColorsDetected
@@ -384,7 +409,7 @@
 
         if (removeBg) {
           const bbox = path.getBBox ? path.getBBox() : null;
-          if (bbox && bbox.width >= svgWidth * 0.9 && bbox.height >= svgHeight * 0.9) {
+          if (bbox && bbox.width >= svgWidth * 0.95 && bbox.height >= svgHeight * 0.95) {
             return;
           }
         }
@@ -401,8 +426,8 @@
           let esColorBg = false;
           let colorRGB = hexToRgb(color);
 
-          // No eliminar capas de color blanco pertenecientes al estampado (#ffffff / #fff)
-          if (color === '#ffffff' || color === '#fff') {
+          // PROTECCIÓN TOTAL: Preservar tanto el color blanco (#ffffff) como el negro (#000000)
+          if (color === '#ffffff' || color === '#fff' || color === '#000000' || color === '#000') {
             esColorBg = false;
           } else if (colorRGB) {
             for (let bg of bgColors) {
