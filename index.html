@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador HD para Serigrafía</title>
+  <title>Vectorizador HD Pro para Serigrafía</title>
   
-  <!-- Vectorizador de alta fidelidad de color -->
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
   <style>
@@ -24,13 +23,17 @@
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; padding: 30px 15px; }
 
     .container { max-width: 900px; margin: 0 auto; }
-    header { text-align: center; margin-bottom: 40px; }
+    header { text-align: center; margin-bottom: 30px; }
     h1 { font-size: 32px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
     p.subtitle { color: var(--text-dim); font-size: 16px; }
 
-    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; text-align: center; margin-bottom: 30px; }
+    .card { background: var(--card-bg); border: 2px dashed var(--border-color); border-radius: 16px; padding: 30px; margin-bottom: 30px; }
     
-    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px; background: rgba(0,0,0,0.2); cursor: pointer; margin-bottom: 20px; transition: 0.2s; }
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; text-align: left; }
+    .option-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: var(--accent-cyan); }
+    .option-group select { width: 100%; padding: 10px; background: #0d1117; border: 1px solid var(--border-color); color: #fff; border-radius: 8px; font-size: 14px; }
+
+    .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 20px; transition: 0.2s; }
     .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
 
     .file-input { display: none; }
@@ -55,26 +58,41 @@
 
   <div class="container">
     <header>
-      <h1>Vectorizador HD para Serigrafía</h1>
-      <p class="subtitle">Limpieza de ruido y generación de trazos limpios en curvas Bezier</p>
+      <h1>Vectorizador Pro (Trazos & Letras)</h1>
+      <p class="subtitle">Optimizado con Super-Sampling 4X y trazado Bezier fluido para serigrafía</p>
     </header>
 
     <div class="card">
-      <h3>📁 Seleccionar Diseños para Vectorizar</h3>
-      <p style="color: var(--text-dim); margin: 10px 0 20px;">Sube tus imágenes. Se procesarán sin ruido y podrás descargarlas una por una.</p>
-      
+      <div class="options-grid">
+        <div class="option-group">
+          <label for="modeSelect">Modo de Procesamiento:</label>
+          <select id="modeSelect">
+            <option value="bw">Monocromo / Letras Nítidas (Recomendado Impresión)</option>
+            <option value="color">Multicolor Completo (Logos y Diseños)</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label for="smoothSelect">Suavizado de Bordes:</label>
+          <select id="smoothSelect">
+            <option value="ultra">Ultra-Suave (Ideal para tipografías)</option>
+            <option value="balanced" selected>Balanceado (Trazo estándar)</option>
+            <option value="sharp">Bordes Rectos / Geométrico</option>
+          </select>
+        </div>
+      </div>
+
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
-        <span id="labelImagenes">Haz clic o arrastra aquí tus imágenes</span>
+        <span id="labelImagenes">📁 Haz clic o arrastra aquí tus diseños</span>
         <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
-      <button class="btn-select" onclick="procesarVectorizacionHD()">⚡ Vectorizar en Alta Fidelidad</button>
+      <button class="btn-select" onclick="procesarVectorizacionHD()">⚡ Vectorizar con Máxima Calidad</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Procesando vectores...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Limpiando marcas de agua y suavizando bordes...</p>
+      <h2 id="statusTitle">Vectorizando con súper-resolución...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Aplicando antialiasing y refinando curvas Bezier...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
       <div id="errorLog" class="error-log"></div>
@@ -85,8 +103,8 @@
     function actualizarEtiqueta() {
       const files = document.getElementById('inputImagenes').files;
       document.getElementById('labelImagenes').innerText = files.length > 0 
-        ? `${files.length} archivo(s) seleccionado(s)` 
-        : 'Haz clic o arrastra aquí tus imágenes';
+        ? `✔ ${files.length} archivo(s) listo(s)` 
+        : '📁 Haz clic o arrastra aquí tus diseños';
     }
 
     async function procesarVectorizacionHD() {
@@ -105,36 +123,36 @@
       resultsGrid.innerHTML = '';
       errorLog.style.display = 'none';
       errorLog.innerHTML = '';
-      title.innerText = "Vectorizando en Alta Fidelidad...";
+      title.innerText = "Vectorizando en Ultra-Resolución...";
 
       let procesadosExitosos = 0;
       let errores = [];
+
+      const modo = document.getElementById('modeSelect').value;
+      const suavizado = document.getElementById('smoothSelect').value;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
         
-        // Pausa breve para refrescar la UI
-        await new Promise(resolve => setTimeout(resolve, 60));
+        await new Promise(resolve => setTimeout(resolve, 80));
 
         try {
-          // 1. Cargar y filtrar marcas de agua/ruido en Canvas
-          const imageData = await cargarYLimpiarImagen(file);
+          // 1. Pre-procesamiento de imagen con Súper Escalado 4X
+          const imageData = await preprocesarImagenSuperHD(file, modo);
 
-          // 2. Vectorizar con parámetros ultra precisos
-          const svgContent = vectorizarImageDataHD(imageData);
+          // 2. Trazado vectorial ajustado para letras y bordes
+          const svgContent = vectorizarConAltaCalidad(imageData, modo, suavizado);
 
           if (svgContent && svgContent.length > 100) {
             let nombreLimpio = file.name.replace(/\.[^/.]+$/, "") || `vector_${i + 1}`;
-            
-            // 3. Crear el botón de descarga individual
             agregarFilaDescarga(nombreLimpio, svgContent);
             procesadosExitosos++;
           } else {
-            errores.push(`${file.name}: Generó un SVG vacío.`);
+            errores.push(`${file.name}: SVG generado sin datos.`);
           }
         } catch (e) {
-          console.error("Error procesando " + file.name, e);
+          console.error(e);
           errores.push(`${file.name}: ${e.message || e}`);
         }
       }
@@ -142,32 +160,33 @@
       spinner.style.display = 'none';
 
       if (procesadosExitosos > 0) {
-        title.innerText = "¡Vectorización Completada!";
-        desc.innerText = "Tus archivos están listos para descargar de forma individual:";
+        title.innerText = "¡Vectorización Ultra-HD Completada!";
+        desc.innerText = "Descarga los archivos SVG optimizados individualmente:";
       } else {
         title.innerText = "Error en el procesamiento";
-        desc.innerText = "No se pudieron procesar las imágenes seleccionadas.";
+        desc.innerText = "Revisa el detalle de errores abajo.";
       }
 
       if (errores.length > 0) {
         errorLog.style.display = 'block';
-        errorLog.innerHTML = "<strong>Detalles del proceso:</strong><br>" + errores.join("<br>");
+        errorLog.innerHTML = "<strong>Alertas durante el proceso:</strong><br>" + errores.join("<br>");
       }
     }
 
-    // Pre-procesador que escala la imagen a 2X y limpia marcas de agua tenue / marcas tipo stock
-    function cargarYLimpiarImagen(file) {
+    // Algoritmo de escalado 4X y corrección de contraste para bordes limpios
+    function preprocesarImagenSuperHD(file, modo) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function(e) {
           const img = new Image();
           img.onload = function() {
             const canvas = document.createElement('canvas');
-            // Escala 2X para mejorar definición de curvas
-            canvas.width = img.width * 2;
-            canvas.height = img.height * 2;
+            // Escalado 4X para dar una matriz de lectura de alta densidad a las letras
+            const scale = 4;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
             const ctx = canvas.getContext('2d');
-
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -176,51 +195,74 @@
               const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
               const data = imgData.data;
 
-              // Filtro de suavizado de contraste para eliminar retículas/marcas de agua tenues
+              // Filtro de afinado de letras y eliminación de desenfoque de bordes (Binarización inteligente)
               for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
                 const b = data[i + 2];
-                
-                // Si el píxel es muy claro (marcas de agua / brillo de fondo), lo homogeneiza
-                if (r > 210 && g > 210 && b > 210) {
-                  data[i] = 255;
-                  data[i + 1] = 255;
-                  data[i + 2] = 255;
+                const luminosidad = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                if (modo === 'bw') {
+                  // Si se busca nitidez extrema en letras negras/diseño
+                  const val = luminosidad > 160 ? 255 : 0;
+                  data[i] = val;
+                  data[i + 1] = val;
+                  data[i + 2] = val;
+                } else {
+                  // Ajuste de contraste para modos a color (quita fondos semitransparentes)
+                  if (luminosidad > 235) {
+                    data[i] = 255;
+                    data[i + 1] = 255;
+                    data[i + 2] = 255;
+                  }
                 }
               }
 
               ctx.putImageData(imgData, 0, 0);
               resolve(imgData);
             } catch (err) {
-              reject(new Error("No se pudo procesar la matriz de píxeles."));
+              reject(new Error("Error leyendo matriz de píxeles."));
             }
           };
-          img.onerror = () => reject(new Error("Formato de imagen no soportado."));
+          img.onerror = () => reject(new Error("Formato de imagen inválido."));
           img.src = e.target.result;
         };
-        reader.onerror = () => reject(new Error("Error leyendo archivo."));
+        reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
         reader.readAsDataURL(file);
       });
     }
 
-    // Configuración para trazo limpio y colores preservados
-    function vectorizarImageDataHD(imageData) {
+    // Configuración fina de la curva Bezier
+    function vectorizarConAltaCalidad(imageData, modo, suavizado) {
+      let ltresVal = 0.1;
+      let qtresVal = 0.1;
+      let strokeWidth = 1;
+
+      if (suavizado === 'ultra') {
+        ltresVal = 0.01; // Curvas hiper fluidas para tipografías redondeadas
+        qtresVal = 0.01;
+      } else if (suavizado === 'sharp') {
+        ltresVal = 1.0;  // Mantiene ángulos rectos para diseños geométricos
+        qtresVal = 1.0;
+      }
+
       const options = {
         corsenabled: false,
-        ltres: 0.3,           // Súper precisión en rectas
-        qtres: 0.3,           // Súper precisión en curvas Bezier
-        pathomit: 8,          // Ignora manchas de ruido menores a 8px
-        colorsampling: 2,     // Lectura de color original
-        numberofcolors: 32,   // Paleta limpia de colores
-        mincolorratio: 0.01,  // Ignora sombras residuales tenue
-        colorquantcycles: 3
+        ltres: ltresVal,
+        qtres: qtresVal,
+        pathomit: 4,               // Desecha ruidos o puntos menores a 4px
+        rightangleenhance: true,   // Detecta y rectifica esquinas de letras en 90°
+        colorsampling: modo === 'bw' ? 0 : 2,
+        numberofcolors: modo === 'bw' ? 2 : 16,
+        mincolorratio: 0.02,
+        colorquantcycles: 4,
+        strokewidth: strokeWidth,
+        linefilter: true           // Elimina las líneas dobles en bordes finos
       };
 
       return ImageTracer.imagedataToSVG(imageData, options);
     }
 
-    // Genera el enlace individual de descarga para cada archivo
     function agregarFilaDescarga(nombre, svgContent) {
       const resultsGrid = document.getElementById('resultsGrid');
       
@@ -230,9 +272,9 @@
       const row = document.createElement('div');
       row.className = 'result-row';
       row.innerHTML = `
-        <span class="result-name">📄 ${nombre}.svg</span>
-        <a href="${url}" download="${nombre}.svg" class="btn-download-single">
-          ⬇️ Descargar SVG
+        <span class="result-name">📄 ${nombre}_HD.svg</span>
+        <a href="${url}" download="${nombre}_HD.svg" class="btn-download-single">
+          ⬇️ Descargar SVG HD
         </a>
       `;
       resultsGrid.appendChild(row);
