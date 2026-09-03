@@ -116,12 +116,13 @@
 
   <script>
     // =========================================================================
-    // 🚀 SECCIÓN PRINCIPAL: FUNCIONES CLAVE DE PROCESAMIENTO Y VECTORIZACIÓN
+    // 🚀 SECCIÓN 1: EXTRAER Y AISLAR EL DISEÑO GRÁFICO IMPRESO
     // =========================================================================
 
     /**
-     * FUNCIÓN 1: Extracción y Limpieza del Arte Gráfico
-     * Elimina el cuello, sombras, pliegues, telas y fondo del mockup.
+     * FUNCIÓN 1: Extrae únicamente el arte impreso de la camiseta.
+     * Convierte el arte en plano rectangular continuo, limpia sombras/pliegues
+     * y conserva intactos los colores blancos y detalles esenciales.
      */
     function extraerSoloDisenoGrafico(canvasOriginal) {
       const canvas = document.createElement('canvas');
@@ -133,22 +134,23 @@
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imgData.data;
 
+      // Procesamiento de píxeles: aislar prenda/sombras sin eliminar el blanco del estampado
       for (let i = 0; i < data.length; i += 4) {
         let r = data[i];
         let g = data[i + 1];
         let b = data[i + 2];
 
-        // Brillo relativo
         let brightness = (r * 0.299 + g * 0.587 + b * 0.114);
 
-        // Limpiar píxeles de sombras tenues o cuellos/extremos
-        if (brightness > 240 || brightness < 15) {
-          data[i + 3] = 0; // Transparencia total
+        // Descartar solo sombras oscuras extremas o bordes del lienzo/mockup
+        // Mantener blancos intactos (brillo alto es preservado)
+        if (brightness < 12) {
+          data[i + 3] = 0; // Transparencia solo a sombras oscuras fuera del diseño
         } else {
-          // Realzar contraste para eliminar ruido de tela
-          data[i]     = Math.min(255, Math.max(0, (r - 128) * 1.35 + 128));
-          data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.35 + 128));
-          data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.35 + 128));
+          // Ajuste fino para mantener bordes nítidos sin desformar ni alterar tonos blancos
+          data[i]     = Math.min(255, Math.max(0, (r - 128) * 1.1 + 128));
+          data[i + 1] = Math.min(255, Math.max(0, (g - 128) * 1.1 + 128));
+          data[i + 2] = Math.min(255, Math.max(0, (b - 128) * 1.1 + 128));
         }
       }
 
@@ -157,9 +159,13 @@
     }
 
 
+    // =========================================================================
+    // 🚀 SECCIÓN 2: VECTORIZACIÓN Y SUAVIZADO DE CURVAS
+    // =========================================================================
+
     /**
-     * FUNCIÓN 2: Vectorización con trazado de alta definición y curvas suaves
-     * Convierte el canvas procesado a un archivo vectorial SVG sin bordes serrucho.
+     * FUNCIÓN 2: Vectorización con trazado de alta definición
+     * Mantiene los parámetros intactos para asegurar la misma calidad del trazado.
      */
     function vectorizarConSoporteTipografico(canvas, numColors, preset) {
       const ctx = canvas.getContext('2d');
@@ -171,13 +177,13 @@
         corsenabled: false,
         ltres: isTextMode ? 0.05 : 0.1,    // Tolerancia fina para bordes rectos
         qtres: isTextMode ? 0.05 : 0.1,    // Tolerancia fina para curvas suaves
-        pathomit: 10,                      // Descartar motas pequeñas
+        pathomit: 10,                      // Descartar ruido pequeño
         rightangleenhance: isTextMode,
         colorsampling: 2,
         numberofcolors: numColors,
         mincolorratio: 0.005,
         colorquantcycles: 6,
-        blurradius: 2,                     // Anti-aliasing previo al trazado
+        blurradius: 2,                     // Anti-aliasing previo
         blurdelta: 20,
         strokewidth: 0,
         linefilter: true
@@ -186,8 +192,9 @@
       return ImageTracer.imagedataToSVG(imgData, options);
     }
 
+
     // =========================================================================
-    // ⚙️ SECCIÓN SECUNDARIA: INTERFAZ Y FLUJO DE TRABAJO (UI / EVENTOS)
+    // ⚙️ SECCIÓN SECUNDARIA: CONTROL DE INTERFAZ Y FLUJO DE DATOS
     // =========================================================================
 
     function actualizarEtiqueta() {
@@ -229,7 +236,7 @@
 
           desc.innerText = `Vectorizando y suavizando curvas [${modoFinal === 'text' ? 'Modo Texto' : 'Modo Gráfico'}]...`;
 
-          // Llamada a la Función 2
+          // Invocación a la Sección 2
           let rawSvg = vectorizarConSoporteTipografico(analisis.canvasProcesado, coloresFinales, modoFinal);
 
           let svgFinal = estructurarCapasYLimpiarFondo(rawSvg, removeBg, analisis.bgColorsDetected);
@@ -262,7 +269,7 @@
             ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Llamada a la Función 1
+            // Invocación a la Sección 1
             const canvasFinal = removeBg ? extraerSoloDisenoGrafico(canvas) : canvas;
 
             const imgData = canvasFinal.getContext('2d').getImageData(0, 0, canvasFinal.width, canvasFinal.height);
@@ -393,7 +400,11 @@
         if (removeBg) {
           let esColorBg = false;
           let colorRGB = hexToRgb(color);
-          if (colorRGB) {
+
+          // No eliminar capas de color blanco pertenecientes al estampado (#ffffff / #fff)
+          if (color === '#ffffff' || color === '#fff') {
+            esColorBg = false;
+          } else if (colorRGB) {
             for (let bg of bgColors) {
               if (distanciaColor(colorRGB, bg) < 35) {
                 esColorBg = true;
