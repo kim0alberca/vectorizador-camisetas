@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vectorizador Ultra-Smooth (Estilo Vector Magic)</title>
+  <title>Vectorizador Pro - Nivel Vector Magic con Remoción de Fondo</title>
   
   <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 
@@ -34,7 +34,10 @@
     .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; text-align: left; }
     .control-group { display: flex; flex-direction: column; gap: 6px; }
     .control-group label { font-size: 13px; color: var(--text-dim); font-weight: 600; }
-    .control-group select { background: #0d1117; color: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; outline: none; }
+    .control-group select, .control-group input { background: #0d1117; color: #fff; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; outline: none; }
+
+    .checkbox-group { display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 10px; }
+    .checkbox-group input { width: 18px; height: 18px; accent-color: var(--accent-cyan); }
 
     .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px 20px; background: rgba(0,0,0,0.2); cursor: pointer; text-align: center; margin-bottom: 20px; transition: 0.2s; }
     .drop-zone:hover { background: rgba(0,242,254,0.05); border-color: var(--accent-cyan); }
@@ -61,44 +64,51 @@
 
   <div class="container">
     <header>
-      <h1>Vectorizador HQ (Curvas Bézier Limpias)</h1>
-      <p class="subtitle">Algoritmo de anti-aliasing previo + trazado de curvas suaves por capas de color</p>
+      <h1>Vectorizador Pro (Ultra Definición & Sin Fondo)</h1>
+      <p class="subtitle">Modo Tipografía/Geometría limpia con separación de capas cromáticas</p>
     </header>
 
     <div class="card">
-      <div class="auto-badge">✨ Modo Vector Magic: Suavizado de bordes activado</div>
+      <div class="auto-badge">🚀 Algoritmo de Preservación Tipográfica Activado</div>
 
       <div class="controls-grid">
         <div class="control-group">
-          <label for="colorCount">Número de colores:</label>
-          <select id="colorCount">
-            <option value="2">2 colores (Logos / Siluetas)</option>
-            <option value="4" selected>4 colores (Diseños estándar)</option>
-            <option value="8">8 colores (Ilustraciones detalladas)</option>
-            <option value="16">16 colores (Complejo)</option>
+          <label for="presetMode">Tipo de Diseño:</label>
+          <select id="presetMode">
+            <option value="text" selected>Textos y Logotipos (Bordes Afilados)</option>
+            <option value="graphic">Ilustraciones y Formas Suaves</option>
           </select>
         </div>
+
         <div class="control-group">
-          <label for="smoothLevel">Nivel de Suavizado:</label>
-          <select id="smoothLevel">
-            <option value="high" selected>Alto (Elimina escalonado)</option>
-            <option value="ultra">Ultra / Curvas orgánicas</option>
+          <label for="colorCount">Cantidad de Colores:</label>
+          <select id="colorCount">
+            <option value="2">2 Colores (Texto / Silueta)</option>
+            <option value="4" selected>3 - 4 Colores (Diseño Estándar)</option>
+            <option value="8">6 - 8 Colores (Complejo)</option>
           </select>
         </div>
       </div>
 
+      <label class="checkbox-group">
+        <input type="checkbox" id="removeBgCheck" checked>
+        <span><strong>Eliminar Fondo Automáticamente</strong> (Remueve el color dominante del lienzo)</span>
+      </label>
+
+      <br>
+
       <div class="drop-zone" onclick="document.getElementById('inputImagenes').click()">
-        <span id="labelImagenes">📁 Selecciona o arrastra tu imagen limpia</span>
+        <span id="labelImagenes">📁 Carga o arrastra tus imágenes aquí</span>
         <input type="file" id="inputImagenes" class="file-input" multiple onchange="actualizarEtiqueta()">
       </div>
       
-      <button class="btn-select" onclick="procesarVectorizacionVectorMagic()">⚡ Vectorizar con Curvas Suaves</button>
+      <button class="btn-select" onclick="procesarVectorizacionProfesional()">⚡ Vectorizar en Calidad Profesional</button>
     </div>
 
     <div class="status-panel" id="statusPanel">
       <div class="spinner" id="spinner"></div>
-      <h2 id="statusTitle">Procesando imagen...</h2>
-      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Aplicando filtro anti-ruido y ajustando curvas Bézier...</p>
+      <h2 id="statusTitle">Vectorizando...</h2>
+      <p id="statusDesc" style="color: var(--text-dim); margin-top: 10px;">Analizando tipografía, aislando fondo y organizando capas...</p>
       
       <div id="resultsGrid" class="results-grid"></div>
     </div>
@@ -108,11 +118,11 @@
     function actualizarEtiqueta() {
       const files = document.getElementById('inputImagenes').files;
       document.getElementById('labelImagenes').innerText = files.length > 0 
-        ? `✔ ${files.length} archivo(s) seleccionado(s)` 
-        : '📁 Selecciona o arrastra tu imagen limpia';
+        ? `✔ ${files.length} archivo(s) listo(s)` 
+        : '📁 Carga o arrastra tus imágenes aquí';
     }
 
-    async function procesarVectorizacionVectorMagic() {
+    async function procesarVectorizacionProfesional() {
       const files = document.getElementById('inputImagenes').files;
       if (files.length === 0) return alert("Por favor, selecciona al menos una imagen.");
 
@@ -125,40 +135,41 @@
       panel.style.display = 'block';
       spinner.style.display = 'block';
       resultsGrid.innerHTML = '';
-      title.innerText = "Vectorizando en Alta Definición...";
+      title.innerText = "Optimizando Geometría Vectorial...";
 
+      const preset = document.getElementById('presetMode').value;
       const numColors = parseInt(document.getElementById('colorCount').value);
-      const smoothLevel = document.getElementById('smoothLevel').value;
+      const removeBg = document.getElementById('removeBgCheck').checked;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        desc.innerText = `Procesando: ${file.name}`;
-        await new Promise(resolve => setTimeout(resolve, 100));
+        desc.innerText = `Procesando (${i + 1}/${files.length}): ${file.name}`;
+        await new Promise(resolve => setTimeout(resolve, 80));
 
         try {
-          // Paso 1: Pre-procesamiento de mapa de bits (Filtro Anti-Aliasing)
-          const canvasProcesado = await preprocesarMapaDeBits(file, numColors);
-          
-          // Paso 2: Generar trazados vectoriales con parámetros de curva suave
-          let rawSvg = vectorizarConCurvasSuaves(canvasProcesado, numColors, smoothLevel);
+          // Paso 1: Pre-procesamiento de nitidez en Canvas
+          const { canvas, bgColorHex } = await optimizarMapaDeBits(file);
 
-          // Paso 3: Agrupar por capas de color y descargar
-          let finalSvg = estructurarCapasYLimpiar(rawSvg);
+          // Paso 2: Trazado inteligente enfocado en preservar esquinas en tipografía
+          let rawSvg = vectorizarConSoporteTipografico(canvas, numColors, preset);
+
+          // Paso 3: Estructuración por capas y eliminación estricta de fondo
+          let svgFinal = procesarEstructuraYSinFondo(rawSvg, removeBg, bgColorHex);
 
           let nombreLimpio = file.name.replace(/\.[^/.]+$/, "");
-          agregarFilaDescarga(nombreLimpio, finalSvg);
+          agregarFilaDescarga(nombreLimpio, svgFinal);
         } catch (e) {
           console.error(e);
         }
       }
 
       spinner.style.display = 'none';
-      title.innerText = "¡Vectorización Completada!";
-      desc.innerText = "Tus archivos SVG con curvas Bézier suavizadas están listos:";
+      title.innerText = "¡Vectorización de Alto Nivel Lista!";
+      desc.innerText = "Vectores con tipografía clara, capas ordenadas y sin fondo:";
     }
 
-    // 1. Limpia los píxeles intermedios y escala la imagen para eliminar el serruchado
-    function preprocesarMapaDeBits(file, numColors) {
+    // 1. Amplifica la resolución x4 y detecta el color de las esquinas (Fondo)
+    function optimizarMapaDeBits(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -167,19 +178,20 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Escalado de alta resolución para suavizar
-            const scale = 3;
+            // Super-Sampling x4 para darle máxima definición a los textos pequeños
+            const scale = 4;
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
 
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
-
-            // Leve filtro de desenfoque inicial para que los bordes duros de los píxeles se unifiquen
-            ctx.filter = 'blur(1px)';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            resolve(canvas);
+            // Muestra del color de fondo en la esquina superior izquierda (0,0)
+            const pixel = ctx.getImageData(5, 5, 1, 1).data;
+            const bgColorHex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+
+            resolve({ canvas, bgColorHex });
           };
           img.src = e.target.result;
         };
@@ -187,35 +199,37 @@
       });
     }
 
-    // 2. Parámetros avanzados para forzar arcos en vez de polígonos
-    function vectorizarConCurvasSuaves(canvas, numColors, smoothLevel) {
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    // 2. Trazado con tolerancia de esquinas
+    function vectorizarConSoporteTipografico(canvas, numColors, preset) {
       const ctx = canvas.getContext('2d');
       const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      const isUltra = smoothLevel === 'ultra';
+      const isTextMode = preset === 'text';
 
       const options = {
         corsenabled: false,
-        // Tolerancias Bézier (Valores más altos = curvas más continuas y menos esquinas)
-        ltres: isUltra ? 1.5 : 0.8,
-        qtres: isUltra ? 1.5 : 0.8,
-        pathomit: 30,             // Filtra pequeños puntos de ruido
-        blurradius: 2,             // Suavizado de bordes antes del trazado
-        blurdelta: 20,
+        // Parámetros críticos para que las letras mantengan esquinas rectificadas
+        ltres: isTextMode ? 0.01 : 0.5,      // Cero deformación en trazos rectos
+        qtres: isTextMode ? 0.01 : 0.5,      // Ajuste Bezier de alta fidelidad
+        pathomit: 8,                         // Omite únicamente pequeños lunares de ruido
+        rightangleenhance: isTextMode,       // RECTIFICA ESQUINAS A 90º (Ideal para tipografías)
         colorsampling: 2,
         numberofcolors: numColors,
-        mincolorratio: 0.02,
-        colorquantcycles: 5,
+        mincolorratio: 0.005,
+        colorquantcycles: 8,
         strokewidth: 0,
-        linefilter: true,
-        scale: 1
+        linefilter: true
       };
 
       return ImageTracer.imagedataToSVG(imgData, options);
     }
 
-    // 3. Organiza los nodos dentro de grupos <g id="Color_HEX">
-    function estructurarCapasYLimpiar(svgString) {
+    // 3. Organiza en capas <g> y elimina la capa contenedora del fondo
+    function procesarEstructuraYSinFondo(svgString, removeBg, bgColorHex) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
       const svgEl = doc.querySelector('svg');
@@ -227,17 +241,27 @@
 
       paths.forEach(path => {
         let fill = path.getAttribute('fill') || '#000000';
+        fill = fill.toLowerCase();
         if (!colorGroups[fill]) colorGroups[fill] = [];
         colorGroups[fill].push(path);
       });
 
       svgEl.innerHTML = '';
 
+      // Identificar y omitir la capa del fondo
+      let targetBg = bgColorHex.toLowerCase();
+
       let layerIndex = 1;
       for (const [color, pathList] of Object.entries(colorGroups)) {
+        
+        // Si la opción de eliminar fondo está activa y el color coincide con el fondo detectado, se omite
+        if (removeBg && sonColoresSimilares(color, targetBg)) {
+          continue; 
+        }
+
         const group = doc.createElementNS('http://www.w3.org/2000/svg', 'g');
-        const hex = color.replace('#', '');
-        group.setAttribute('id', `Capa_${layerIndex}_#${hex}`);
+        const hexName = color.replace('#', '');
+        group.setAttribute('id', `Capa_${layerIndex}_#${hexName}`);
         group.setAttribute('fill', color);
 
         pathList.forEach(p => {
@@ -252,6 +276,19 @@
       return new XMLSerializer().serializeToString(doc);
     }
 
+    // Comparador numérico para tolerar ligeras variaciones de color de fondo
+    function sonColoresSimilares(hex1, hex2) {
+      if (hex1 === hex2) return true;
+      let c1 = parseInt(hex1.replace('#',''), 16);
+      let c2 = parseInt(hex2.replace('#',''), 16);
+      
+      let r1 = (c1 >> 16) & 255, g1 = (c1 >> 8) & 255, b1 = c1 & 255;
+      let r2 = (c2 >> 16) & 255, g2 = (c2 >> 8) & 255, b2 = c2 & 255;
+
+      let diff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
+      return diff < 30; // Margen de tolerancia cromática
+    }
+
     function agregarFilaDescarga(nombre, svgContent) {
       const resultsGrid = document.getElementById('resultsGrid');
       const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8" });
@@ -261,11 +298,11 @@
       row.className = 'result-row';
       row.innerHTML = `
         <div class="result-info">
-          <span class="result-name">✨ ${nombre}_Vector_Magic_Quality.svg</span>
-          <span class="result-meta">✔ Curvas Bézier Suaves + Capas Organizadas</span>
+          <span class="result-name">👑 ${nombre}_Pro_SinFondo.svg</span>
+          <span class="result-meta">✔ Tipografía Definida + Sin Fondo + Capas Limpias</span>
         </div>
-        <a href="${url}" download="${nombre}_Vector_Magic_HQ.svg" class="btn-download-single">
-          ⬇️ Descargar SVG Suave
+        <a href="${url}" download="${nombre}_Pro_SinFondo.svg" class="btn-download-single">
+          ⬇️ Descargar SVG Profesional
         </a>
       `;
       resultsGrid.appendChild(row);
